@@ -56,8 +56,8 @@ void hbox_exit_critical()
          * TODO:实现临界区,开关全局中断(MIE)将导致异常,暂时无法使用开关中断实现临界区
          * 临时解决方法为对有可能使用到全局锁的中断在此处开关中断(如软件中断等)
          */
-        
-        
+
+
     }
 }
 
@@ -79,7 +79,7 @@ void hbox_free (void *ptr)
 static int hbox_version_entry (int argc, const char *argv[])
 {
     hshell_context_t *hshell_ctx = hshell_context_get_from_main_argv (argc, argv);
-    hshell_printf (hshell_ctx, "0.0.0.1\r\n");
+    hshell_printf (hshell_ctx, "version=0.0.0.1(ChipID:%08x)\r\n",DBGMCU_GetCHIPID());
     return 0;
 }
 

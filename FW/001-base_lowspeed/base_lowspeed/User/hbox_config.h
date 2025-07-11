@@ -33,6 +33,17 @@
  */
 #define HRUNTIME_USING_SYMBOL_SECTION 1
 
+/*
+ * 使用自定义的putchar
+ */
+#define HPUTCHAR hbox_shell_putchar
+
+/*
+ * 使用自定义的getchar
+ */
+#define HGETCHAR hbox_shell_getchar
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

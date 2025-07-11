@@ -30,6 +30,7 @@
  */
 int main (void)
 {
+    FLASH_Enhance_Mode(ENABLE);
     NVIC_PriorityGroupConfig (NVIC_PriorityGroup_1);
     SystemCoreClockUpdate();
     /*
