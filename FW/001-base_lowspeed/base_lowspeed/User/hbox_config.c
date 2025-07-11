@@ -1,4 +1,4 @@
-#include "hbox_config.h"
+ï»¿#include "hbox_config.h"
 #include "hbox.h"
 #include "ch32v20x.h"
 #include "core_riscv.h"
@@ -9,7 +9,7 @@ void hbox_tick_init (void)
     SysTick->CNT = 0;
     SystemCoreClockUpdate();
     /*
-     * ºÁÃë¶¨Ê±Æ÷
+     * æ¯«ç§’å®šæ—¶å™¨
      */
     SysTick->CMP = (SystemCoreClock/1000)-1;
     SysTick->CTLR =0xF;
@@ -39,7 +39,7 @@ void hbox_enter_critical()
     if (hbox_critical_cnt == 0)
     {
         /*
-         * ¹Ø±ÕMIE
+         * å…³é—­MIE
          */
         uint32_t mstatus = __get_MSTATUS();
         mstatus &= ~((1UL << 3));
@@ -54,7 +54,7 @@ void hbox_exit_critical()
     if (hbox_critical_cnt == 0)
     {
         /*
-         * ´ò¿ªMIE
+         * æ‰“å¼€MIE
          */
         uint32_t mstatus = __get_MSTATUS();
         mstatus |= ((1UL << 3));

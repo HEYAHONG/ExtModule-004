@@ -1,4 +1,4 @@
-/********************************** (C) COPYRIGHT *******************************
+ï»¿/********************************** (C) COPYRIGHT *******************************
  * File Name          : main.c
  * Author             : WCH
  * Version            : V1.0.0
@@ -33,7 +33,7 @@ int main (void)
     NVIC_PriorityGroupConfig (NVIC_PriorityGroup_1);
     SystemCoreClockUpdate();
     /*
-     * ³õÊ¼»¯Tick£¬µ±Ê±ÖÓ·¢Éú±ä»¯Ê±ĞèÒªÊÖ¶¯ÔÙ´Îµ÷ÓÃ³õÊ¼»¯Tick
+     * åˆå§‹åŒ–Tickï¼Œå½“æ—¶é’Ÿå‘ç”Ÿå˜åŒ–æ—¶éœ€è¦æ‰‹åŠ¨å†æ¬¡è°ƒç”¨åˆå§‹åŒ–Tick
      */
     hbox_tick_init();
     hcpprt_init();
