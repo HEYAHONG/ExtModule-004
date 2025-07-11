@@ -29,6 +29,7 @@ hdefaults_tick_t hbox_tick_get (void)
 void hbox_tick_inc (void)
 {
     SysTick->SR = 0;
+    SysTick->CTLR =0xF;
     current_tick++;
 }
 
@@ -39,11 +40,9 @@ void hbox_enter_critical()
     if (hbox_critical_cnt == 0)
     {
         /*
-         * 关闭MIE
+         * TODO:实现临界区,开关全局中断(MIE)将导致异常，暂时无法使用开关中断实现临界区
+         * 临时解决方法为对有可能使用到全局锁的中断在此处开关中断(如软件中断等)
          */
-        uint32_t mstatus = __get_MSTATUS();
-        mstatus &= ~((1UL << 3));
-        __set_MSTATUS (mstatus);
     }
     hbox_critical_cnt++;
 }
@@ -54,11 +53,11 @@ void hbox_exit_critical()
     if (hbox_critical_cnt == 0)
     {
         /*
-         * 打开MIE
+         * TODO:实现临界区,开关全局中断(MIE)将导致异常,暂时无法使用开关中断实现临界区
+         * 临时解决方法为对有可能使用到全局锁的中断在此处开关中断(如软件中断等)
          */
-        uint32_t mstatus = __get_MSTATUS();
-        mstatus |= ((1UL << 3));
-        __set_MSTATUS (mstatus);
+        
+        
     }
 }
 
