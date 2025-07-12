@@ -53,10 +53,41 @@ static void rtc_init(void)
     }
 }
 
+static void sys_reset()
+{
+    NVIC_SystemReset();
+    //若NVIC复位未实现，使用死循环通过硬件看门狗复位
+    while(true)
+    {
 
+    }
+}
+
+static void hw_feed()
+{
+    IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+    IWDG_ReloadCounter();
+    IWDG_WriteAccessCmd(IWDG_WriteAccess_Disable);
+}
+
+static void watchdog_init()
+{
+    hwatchdog_set_hardware_dog_feed(hw_feed);
+    hwatchdog_setup_software_dog(sys_reset,hdefaults_tick_get);
+    IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+    /*
+     * 看门狗超时时间=1/（时钟源（40k Hz）/预分频）* 计数器值
+     */
+    IWDG_SetPrescaler(IWDG_Prescaler_256); /*预分频*/
+    IWDG_SetReload(4000); /*12位减计数重装值*/
+    IWDG_ReloadCounter();
+    IWDG_Enable();
+    IWDG_WriteAccessCmd(IWDG_WriteAccess_Disable);
+}
 
 static void  hbox_port_init(const hruntime_function_t *func)
 {
+    watchdog_init();
     rtc_init();
 }
 HRUNTIME_INIT_EXPORT(port,0,hbox_port_init,NULL);
