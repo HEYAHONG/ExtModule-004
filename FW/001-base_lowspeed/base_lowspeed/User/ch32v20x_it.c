@@ -66,4 +66,20 @@ void USART2_IRQHandler(void)
         uint8_t data=USART_ReceiveData(USART2);
         hbox_shell_console_input(data);
     }
+    if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET)
+    {
+        USART_ClearITPendingBit(USART2,USART_IT_TXE);
+        uint8_t data=0;
+        if(hbox_shell_console_output(&data))
+        {
+            USART_SendData(USART2,data);
+        }
+        else
+        {
+            /*
+             * 停止发送
+             */
+            USART_ITConfig(USART2,USART_IT_TXE,DISABLE);
+        }
+    }
 }

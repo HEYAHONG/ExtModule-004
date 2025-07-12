@@ -11,6 +11,7 @@ extern "C"
 #define console_printf(fmt,...) hprintf("[%08X] " fmt "\r\n" ,hdefaults_tick_get(),##__VA_ARGS__)
 
 void hbox_shell_console_input(uint8_t data);
+bool hbox_shell_console_output(uint8_t* data);
 
 #ifdef __cplusplus
 }

@@ -5,14 +5,37 @@
  */
 static bool is_usart2_init_ok=false;
 static hringbuf_t * console_rx_buffer_get(void);
+static uint8_t console_tx_buffer[512]= {0};
+static hringbuf_t * console_tx_buffer_get(void)
+{
+    hringbuf_t * buffer=hringbuf_get(console_tx_buffer,sizeof(console_tx_buffer));
+    hringbuf_set_lock(buffer,NULL,NULL,NULL);
+    return buffer;
+}
+bool hbox_shell_console_output(uint8_t* data)
+{
+    bool ret=false;
+    hringbuf_t *rbuf=console_tx_buffer_get();
+    if(rbuf!=NULL && hringbuf_get_length(rbuf) > 0)
+    {
+        ret=(0!=hringbuf_output(rbuf,data,sizeof(*data)));
+    }
+    return ret;
+}
 int hbox_shell_putchar(int ch)
 {
     if(ch>0)
     {
         if(is_usart2_init_ok)
         {
-            while(RESET==USART_GetFlagStatus(USART2,USART_FLAG_TXE));
-            USART_SendData(USART2,(uint16_t)ch);
+            hringbuf_t *rbuf=console_tx_buffer_get();
+            if(rbuf!=NULL)
+            {
+                uint8_t data=ch;
+                hringbuf_input(rbuf,&data,sizeof(data));
+                //启动中断发送
+                USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+            }
         }
 
     }
@@ -53,6 +76,7 @@ static hringbuf_t * console_rx_buffer_get(void)
     hringbuf_set_lock(buffer,NULL,NULL,NULL);
     return buffer;
 }
+
 
 static void  hbox_shell_console_init(void)
 {
@@ -99,7 +123,13 @@ static void  hbox_shell_init(const hruntime_function_t *func)
     hshell_command_name_shortcut_set(NULL,true);
     HSHELL_COMMANDS_REGISTER(NULL);
     hprintf_set_callback(putchar_cb);
+    hprintf("\r\n");
     console_printf("console init!");
+    {
+        extern char _end[];
+        extern char _heap_end[];
+        console_printf("heap:addr=%08X,length=%d bytes(%dk bytes)",(uintptr_t)_end,((uintptr_t)_heap_end)-((uintptr_t)_end),(((uintptr_t)_heap_end)-((uintptr_t)_end))/1024);
+    }
 }
 HRUNTIME_INIT_EXPORT(shell,0,hbox_shell_init,NULL);
 
