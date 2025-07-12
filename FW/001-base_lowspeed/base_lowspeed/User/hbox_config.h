@@ -33,6 +33,7 @@
  */
 #define HRUNTIME_USING_SYMBOL_SECTION 1
 
+
 /*
  * 使用自定义的putchar
  */
@@ -47,9 +48,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include "time.h"
 
 void hbox_tick_init (void);
 void hbox_tick_inc (void);
+void hbox_set_time(time_t new_time);
 
 #ifdef __cplusplus
 }
