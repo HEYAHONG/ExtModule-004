@@ -58,4 +58,12 @@ void hbox_set_time(time_t new_time);
 }
 #endif
 
+/*
+ * CH32V208支持96位唯一编码，可分为3个32位无符号数
+ */
+#ifndef HBOX_HW_UID_BASE
+#define HBOX_HW_UID_BASE        ((uint8_t *)0x1FFFF7E8)
+#define HBOX_HW_UID_LENGTH      (12)
+#endif
+
 #endif  // __HBOX_CONFIG_H__

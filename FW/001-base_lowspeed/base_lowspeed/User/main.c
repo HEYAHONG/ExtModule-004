@@ -37,6 +37,23 @@ int main (void)
      * 初始化Tick，当时钟发生变化时需要手动再次调用初始化Tick
      */
     hbox_tick_init();
+    {
+        {
+            /*
+             * 初始化时间为2020-01-01 00:00:00
+             * 主要用于初始化随机数
+             */
+            hsettimeofday_timeval_t tv= {0};
+            tv.tv_sec=1577808000;
+            hsettimeofday(&tv,NULL);
+        }
+        /*
+         * 初始化随机数(由于CH32V208没有真随机数发生器（TRNG）,采用初始化伪随机数种子)
+         */
+        uint8_t temp[4]= {0};
+        hgetrandom(temp,sizeof(temp),0); //读取一次随机数,进行内部初始化
+        srand(hcrc_crc32_fast_calculate((const uint8_t *)HBOX_HW_UID_BASE,HBOX_HW_UID_LENGTH)); //初始化随机数种子
+    }
     hcpprt_init();
     while (1)
     {
