@@ -1,4 +1,4 @@
-/********************************** (C) COPYRIGHT *******************************
+﻿/********************************** (C) COPYRIGHT *******************************
  * File Name          : system_ch32v20x.c
  * Author             : WCH
  * Version            : V1.0.0
@@ -19,8 +19,9 @@
  * If none of the define below is enabled, the HSI is used as System clock source.
  */
 // #define SYSCLK_FREQ_HSE    HSE_VALUE
-#define SYSCLK_FREQ_48MHz_HSE 48000000
+// #define SYSCLK_FREQ_48MHz_HSE 48000000
 // #define SYSCLK_FREQ_56MHz_HSE  56000000
+#define SYSCLK_FREQ_60MHz_HSE  60000000
 // #define SYSCLK_FREQ_72MHz_HSE  72000000
 // #define SYSCLK_FREQ_96MHz_HSE  96000000
 // #define SYSCLK_FREQ_120MHz_HSE  120000000
@@ -40,6 +41,8 @@ uint32_t SystemCoreClock = SYSCLK_FREQ_HSE; /* System Clock Frequency (Core Cloc
 uint32_t SystemCoreClock = SYSCLK_FREQ_48MHz_HSE; /* System Clock Frequency (Core Clock) */
 #elif defined SYSCLK_FREQ_56MHz_HSE
 uint32_t SystemCoreClock = SYSCLK_FREQ_56MHz_HSE; /* System Clock Frequency (Core Clock) */
+#elif defined SYSCLK_FREQ_60MHz_HSE
+uint32_t SystemCoreClock = SYSCLK_FREQ_60MHz_HSE; /* System Clock Frequency (Core Clock) */
 #elif defined SYSCLK_FREQ_72MHz_HSE
 uint32_t SystemCoreClock = SYSCLK_FREQ_72MHz_HSE; /* System Clock Frequency (Core Clock) */
 #elif defined SYSCLK_FREQ_96MHz_HSE
@@ -77,6 +80,8 @@ static void SetSysClockToHSE (void);
 static void SetSysClockTo48_HSE (void);
 #elif defined SYSCLK_FREQ_56MHz_HSE
 static void SetSysClockTo56_HSE (void);
+#elif defined SYSCLK_FREQ_60MHz_HSE
+static void SetSysClockTo60_HSE (void);
 #elif defined SYSCLK_FREQ_72MHz_HSE
 static void SetSysClockTo72_HSE (void);
 #elif defined SYSCLK_FREQ_96MHz_HSE
@@ -215,6 +220,8 @@ static void SetSysClock (void)
     SetSysClockTo48_HSE();
 #elif defined SYSCLK_FREQ_56MHz_HSE
     SetSysClockTo56_HSE();
+#elif defined SYSCLK_FREQ_60MHz_HSE
+    SetSysClockTo60_HSE();
 #elif defined SYSCLK_FREQ_72MHz_HSE
     SetSysClockTo72_HSE();
 #elif defined SYSCLK_FREQ_96MHz_HSE
@@ -427,6 +434,79 @@ static void SetSysClockTo56_HSE (void)
         RCC->CFGR0 &= (uint32_t)((uint32_t) ~(RCC_PLLSRC | RCC_PLLXTPRE | RCC_PLLMULL));
 
         RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL7);
+
+        /* Enable PLL */
+        RCC->CTLR |= RCC_PLLON;
+        /* Wait till PLL is ready */
+        while ((RCC->CTLR & RCC_PLLRDY) == 0)
+        {
+        }
+
+        /* Select PLL as system clock source */
+        RCC->CFGR0 &= (uint32_t)((uint32_t) ~(RCC_SW));
+        RCC->CFGR0 |= (uint32_t)RCC_SW_PLL;
+        /* Wait till PLL is used as system clock source */
+        while ((RCC->CFGR0 & (uint32_t)RCC_SWS) != (uint32_t)0x08)
+        {
+        }
+    }
+    else
+    {
+        /*
+         * If HSE fails to start-up, the application will have wrong clock
+         * configuration. User can add here some code to deal with this error
+         */
+    }
+}
+
+#elif defined SYSCLK_FREQ_60MHz_HSE
+
+/*********************************************************************
+ * @fn      SetSysClockTo60_HSE
+ *
+ * @brief   Sets System clock frequency to 60MHz and configure HCLK, PCLK2 and PCLK1 prescalers.
+ *
+ * @return  none
+ */
+static void SetSysClockTo60_HSE (void)
+{
+    __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
+
+    RCC->CTLR |= ((uint32_t)RCC_HSEON);
+
+    /* Wait till HSE is ready and if Time out is reached exit */
+    do
+    {
+        HSEStatus = RCC->CTLR & RCC_HSERDY;
+        StartUpCounter++;
+    }
+    while ((HSEStatus == 0) && (StartUpCounter != HSE_STARTUP_TIMEOUT));
+
+    if ((RCC->CTLR & RCC_HSERDY) != RESET)
+    {
+        HSEStatus = (uint32_t)0x01;
+    }
+    else
+    {
+        HSEStatus = (uint32_t)0x00;
+    }
+
+    if (HSEStatus == (uint32_t)0x01)
+    {
+        /* HCLK = SYSCLK/4 */
+        RCC->CFGR0 |= (uint32_t)RCC_HPRE_DIV4;
+        /* PCLK2 = HCLK */
+        RCC->CFGR0 |= (uint32_t)RCC_PPRE2_DIV1;
+        /* PCLK1 = HCLK */
+        RCC->CFGR0 |= (uint32_t)RCC_PPRE1_DIV2;
+
+        /* 
+         *  CH32V20x_D8W-PLL configuration: PLLCLK = HSE/2 * 15 = 240 MHz (HSE=32MHZ)
+         *  启用USB 5分频，以太网不分频，主频:PLLCLK/4=60MHz
+         */
+        RCC->CFGR0 &= (uint32_t)((uint32_t) ~(RCC_PLLSRC | RCC_PLLXTPRE |(3UL << 22)|(1UL << 28)| RCC_PLLMULL));
+
+        RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | (3UL<<22) | RCC_PLLMULL15);
 
         /* Enable PLL */
         RCC->CTLR |= RCC_PLLON;
