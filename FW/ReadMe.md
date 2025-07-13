@@ -33,4 +33,4 @@ MRS2是一个可用于WCH芯片开发的集成开发环境,其可集开发、调
 
 # 固件列表
 
-- [001-base_lowspeed](001-base_lowspeed):低速模式(采用48MHz主时钟,可能使用额外的`Code Flash`区域)的MCU模板。
+- [001-base_lowspeed](001-base_lowspeed):低速模式(采用不超过60M Hz的时钟,可能使用额外的`Code Flash`区域)的MCU模板。
