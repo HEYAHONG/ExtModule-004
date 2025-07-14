@@ -14,12 +14,34 @@
 #include "ch32v20x.h"
 #include "core_riscv.h"
 #include "hbox.h"
+#include "time.h"
 
 /* Global typedef */
 
 /* Global define */
 
 /* Global Variable */
+/*
+ * 全局环境变量
+ */
+static char *global_environ[]=
+{
+    /*
+     * 语言设置
+     */
+    (char *)"LANG=zh_CN.UTF-8",
+    /*
+     * 时区设置(调用tzset生效,设置完成后，C库的相关时间函数的时区即生效)
+     */
+    (char *)"TZ=CST-8:00:00",
+    NULL
+};
+
+/*
+ * 设定环境变量指针
+ */
+char **environ=global_environ;
+
 
 /*********************************************************************
  * @fn      main
@@ -54,6 +76,8 @@ int main (void)
         hgetrandom(temp,sizeof(temp),0); //读取一次随机数,进行内部初始化
         srand(hcrc_crc32_fast_calculate((const uint8_t *)HBOX_HW_UID_BASE,HBOX_HW_UID_LENGTH)); //初始化随机数种子
     }
+    //设置时区
+    tzset();
     hcpprt_init();
     while (1)
     {
