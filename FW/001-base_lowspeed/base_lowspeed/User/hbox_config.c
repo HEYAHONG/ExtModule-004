@@ -113,7 +113,15 @@ static int cmd_datetime_entry(int argc,const char *argv[])
 {
     hshell_context_t * hshell_ctx=hshell_context_get_from_main_argv(argc,argv);
     time_t time_now=time(NULL);
-    hshell_printf(hshell_ctx,"%s",asctime(localtime(&time_now)));
+    const char *TZ="";
+    {
+        const char *tz_str=hgetenv("TZ");
+        if(tz_str!=NULL)
+        {
+            TZ=tz_str;
+        }
+    }
+    hshell_printf(hshell_ctx,"%s %s",TZ,asctime(localtime(&time_now)));
     return 0;
 };
 HSHELL_COMMAND_EXPORT(datetime,cmd_datetime_entry,show datetime);
