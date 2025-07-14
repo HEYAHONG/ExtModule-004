@@ -52,7 +52,16 @@ char **environ=global_environ;
  */
 int main (void)
 {
-    FLASH_Enhance_Mode(ENABLE);
+    {
+        /*
+         * 启用Flash增强模式,若要进行Flash操作，请先关闭增强模式
+         */
+        FLASH_Unlock();
+        FLASH_Unlock_Fast();
+        FLASH_Enhance_Mode(ENABLE);
+        FLASH_Lock_Fast();
+        FLASH_Lock();
+    }
     NVIC_PriorityGroupConfig (NVIC_PriorityGroup_1);
     SystemCoreClockUpdate();
     /*
