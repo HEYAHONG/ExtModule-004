@@ -18,6 +18,10 @@
 			{
 				"name": "HBox",
 				"location": "../../3rdparty/HCppBox/master/hbox"
+			},
+			{
+				"name": "Lwip",
+				"location": "../../3rdparty/lwip/master/src"
 			}
 		],
 		"removedResources": [
@@ -66,7 +70,18 @@
 					"${project}/HBox/hsimulator",
 					"${project}/HBox/huuid",
 					"${project}/HBox/pbinc",
-					"${project}/HBox/h3rdparty/3rdparty"
+					"${project}/HBox/h3rdparty/3rdparty",
+					"${project}/Lwip/netif/ppp",
+					"${project}/Lwip/netif/bridgeif_fdb.c",
+					"${project}/Lwip/netif/bridgeif.c",
+					"${project}/Lwip/netif/lowpan6_ble.c",
+					"${project}/Lwip/netif/lowpan6_common.c",
+					"${project}/Lwip/netif/lowpan6.c",
+					"${project}/Lwip/netif/slipif.c",
+					"${project}/Lwip/netif/zepif.c",
+					"${project}/Lwip/apps/http/makefsdata",
+					"${project}/Lwip/apps/http/fs",
+					"${project}/Lwip/apps/http/fsdata.c"
 				],
 				"optimization": {
 					"level": "size",
@@ -156,7 +171,9 @@
 							"${project}/Peripheral/inc",
 							"${project}/HBox",
 							"${project}/HBox/cpp",
-							"${project}/ETH_Driver"
+							"${project}/ETH_Driver",
+							"${project}/Lwip_Port",
+							"${project}/Lwip/include"
 						],
 						"include_system_paths": [],
 						"include_files": []
@@ -197,7 +214,9 @@
 							"${project}/Peripheral/inc",
 							"${project}/Startup",
 							"${project}/User",
-							"${project}/ETH_Driver"
+							"${project}/ETH_Driver",
+							"${project}/Lwip_Port",
+							"${project}/Lwip/include"
 						],
 						"include_system_paths": [],
 						"include_files": []
@@ -377,17 +396,21 @@
 			"telnetport": 4444,
 			"tclport": 6666,
 			"configOptions": [
-				"-f \"${WCH:OpenOCD:default}/bin/wch-riscv.cfg\""
+				"-f \"${WCH:OpenOCD:default}/bin/wch-riscv.cfg\" -c page_erase -c init -c \"wch_riscv unfreeze\""
 			],
 			"host": "localhost",
 			"port": 3333,
 			"skipDownloadBeforeDebug": false,
-			"enablePageEraser": false,
-			"enableNoZeroWaitingAreaFlash": false
+			"enablePageEraser": true,
+			"enableNoZeroWaitingAreaFlash": true
 		},
 		"gdbCfg": {
 			"executable": "${WCH:Toolchain:GCC8}",
-			"options": [],
+			"options": [
+				"set",
+				"remotetimeout",
+				"5000"
+			],
 			"commands": [
 				"set mem inaccessible-by-default off",
 				"set architecture riscv:rv32",
@@ -441,10 +464,8 @@
 			"ATTR_BUILD_BEFORE_LAUNCH_ATTR": 2,
 			"GdbServerAllocateConsole": true,
 			"GdbServerAllocateTelnetConsole": false,
-			"SkipDownloadBeforeDebug": false,
 			"StartGdbCLient": true,
-			"UPDATE_THREADLIST_ON_SUSPEND": false,
-			"DebugInRam": false
+			"UPDATE_THREADLIST_ON_SUSPEND": false
 		}
 	}
 }

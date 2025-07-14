@@ -27,6 +27,11 @@
       <type>2</type>
       <location>PARENT-2-PROJECT_LOC/3rdparty/HCppBox/master/hbox</location>
     </link>
+    <link>
+      <name>Lwip</name>
+      <type>2</type>
+      <location>PARENT-2-PROJECT_LOC/3rdparty/lwip/master/src</location>
+    </link>
   </linkedResources>
   <filteredResources>
     <filter>
