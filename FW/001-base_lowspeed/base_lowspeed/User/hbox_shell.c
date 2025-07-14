@@ -125,6 +125,7 @@ static void  hbox_shell_init(const hruntime_function_t *func)
     hprintf_set_callback(putchar_cb);
     hprintf("\r\n");
     console_printf("console init!");
+    console_printf("hit any key to activate hshell!");
     {
         extern char _end[];
         extern char _heap_end[];
@@ -135,7 +136,22 @@ HRUNTIME_INIT_EXPORT(shell,0,hbox_shell_init,NULL);
 
 static void  hbox_shell_loop(const hruntime_function_t *func)
 {
-    while(hshell_loop(NULL)==0);
+    static bool keyhit=false;
+    if(keyhit)
+    {
+        while(hshell_loop(NULL)==0);
+    }
+    else
+    {
+        hringbuf_t *rbuf=console_rx_buffer_get();
+        if(rbuf!=NULL)
+        {
+            if(hringbuf_get_length(rbuf)>0)
+            {
+                keyhit=true;
+            }
+        }
+    }
 }
 HRUNTIME_LOOP_EXPORT(shell,0,hbox_shell_loop,NULL);
 

@@ -323,8 +323,10 @@ void RecDataPolling(void)
             buffer = pDMARxSet->Buffer1Addr;
 
             /* Do something*/
-            printf("rec data:%d bytes\r\n",length);
-            printf("data:%x\r\n",*((uint8_t *)buffer));
+            //printf("rec data:%d bytes\r\n",length);
+            //printf("data:%x\r\n",*((uint8_t *)buffer));
+            extern void __hbox_update_receive_data(const uint8_t* data,size_t data_length);
+            __hbox_update_receive_data((const uint8_t *)buffer,length);
         }
         pDMARxSet->Status = ETH_DMARxDesc_OWN;
         pDMARxSet = (ETH_DMADESCTypeDef *)pDMARxSet->Buffer2NextDescAddr;
@@ -580,6 +582,7 @@ void ETH_PHYLink( void )
     }
 }
 
+extern void __hbox_update_linked_state(void);
 /*********************************************************************
  * @fn      WCHNET_ETHIsr
  *
@@ -633,6 +636,7 @@ void WCHNET_ETHIsr( void )
     {
         ETH_PHYLink();
         R8_ETH_EIR = RB_ETH_EIR_LINKIF;
+        __hbox_update_linked_state();
     }
     if(eth_irq_flag&RB_ETH_EIR_TXERIF)                              //send error
     {
