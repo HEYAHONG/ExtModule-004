@@ -12,12 +12,14 @@
 #include "ch32v20x_it.h"
 #include "hbox.h"
 #include "hbox_shell.h"
+#include "eth_driver.h"
 
 void NMI_Handler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
 void HardFault_Handler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
 void SysTick_Handler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
 void SW_Handler(void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
 void USART2_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+void ETH_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
 /*********************************************************************
  * @fn      NMI_Handler
@@ -51,6 +53,7 @@ void HardFault_Handler (void)
 void SysTick_Handler (void)
 {
     hbox_tick_inc();
+    WCHNET_TimeIsr(1);
 }
 
 void SW_Handler(void)
@@ -83,3 +86,9 @@ void USART2_IRQHandler(void)
         }
     }
 }
+
+void ETH_IRQHandler(void)
+{
+    WCHNET_ETHIsr();
+}
+

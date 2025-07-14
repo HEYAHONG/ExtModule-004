@@ -155,7 +155,8 @@
 							"${project}/User",
 							"${project}/Peripheral/inc",
 							"${project}/HBox",
-							"${project}/HBox/cpp"
+							"${project}/HBox/cpp",
+							"${project}/ETH_Driver"
 						],
 						"include_system_paths": [],
 						"include_files": []
@@ -195,7 +196,8 @@
 							"${project}/Debug",
 							"${project}/Peripheral/inc",
 							"${project}/Startup",
-							"${project}/User"
+							"${project}/User",
+							"${project}/ETH_Driver"
 						],
 						"include_system_paths": [],
 						"include_files": []
@@ -375,13 +377,13 @@
 			"telnetport": 4444,
 			"tclport": 6666,
 			"configOptions": [
-				"-f \"${WCH:OpenOCD:default}/bin/wch-riscv.cfg\" -c page_erase -c init -c \"wch_riscv unfreeze\""
+				"-f \"${WCH:OpenOCD:default}/bin/wch-riscv.cfg\""
 			],
 			"host": "localhost",
 			"port": 3333,
 			"skipDownloadBeforeDebug": false,
-			"enablePageEraser": true,
-			"enableNoZeroWaitingAreaFlash": true
+			"enablePageEraser": false,
+			"enableNoZeroWaitingAreaFlash": false
 		},
 		"gdbCfg": {
 			"executable": "${WCH:Toolchain:GCC8}",
@@ -439,8 +441,10 @@
 			"ATTR_BUILD_BEFORE_LAUNCH_ATTR": 2,
 			"GdbServerAllocateConsole": true,
 			"GdbServerAllocateTelnetConsole": false,
+			"SkipDownloadBeforeDebug": false,
 			"StartGdbCLient": true,
-			"UPDATE_THREADLIST_ON_SUSPEND": false
+			"UPDATE_THREADLIST_ON_SUSPEND": false,
+			"DebugInRam": false
 		}
 	}
 }
