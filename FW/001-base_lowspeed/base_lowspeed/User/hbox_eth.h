@@ -1,4 +1,4 @@
-#ifndef __HBOX_ETH_H__
+ï»¿#ifndef __HBOX_ETH_H__
 #define __HBOX_ETH_H__
 #include "eth_driver.h"
 #include "hbox.h"
@@ -11,7 +11,7 @@ bool hbox_eth_is_linked(void);
 typedef enum
 {
     HBOX_ETH_EVENT_LINKED_STATE_CHANGE=1,
-    HBOX_ETH_EVENT_RECEIVE_DATA,/*°üº¬Á½¸ö¶îÍâµÄ²ÎÊı(·Ö±ğÊÇuint8_t *¡¢size_t)*/
+    HBOX_ETH_EVENT_RECEIVE_DATA,/*åŒ…å«ä¸¤ä¸ªé¢å¤–çš„å‚æ•°(åˆ†åˆ«æ˜¯uint8_t *ã€size_t)*/
 } hbox_eth_event_t;
 
 typedef void (*hbox_eth_event_callback_t)(hbox_eth_event_t evt,...);

@@ -1,4 +1,4 @@
-#include "hbox_eth.h"
+ï»¿#include "hbox_eth.h"
 #include "hbox_shell.h"
 extern volatile uint8_t LinkSta;
 bool hbox_eth_is_linked(void)
@@ -23,7 +23,7 @@ static void hbox_update_linked_state(void)
     is_linked_state_change=false;
     console_printf("eth:%s",(hbox_eth_is_linked()?"up":"down"));
     /*
-     * ÒÔÌ«ÍøÁ¬½Ó×´Ì¬¸Ä±ä
+     * ä»¥å¤ªç½‘è¿æ¥çŠ¶æ€æ”¹å˜
      */
     hbox_eth_event_callback_t cb=hbox_eth_event_cb;
     if(cb!=NULL)
