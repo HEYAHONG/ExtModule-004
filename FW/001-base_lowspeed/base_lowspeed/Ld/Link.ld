@@ -55,6 +55,14 @@ SECTIONS
 	.text :
 	{
 		. = ALIGN(4);
+		*_it*(.text)
+		*_it*(.text.*)
+		*startup*(.text)
+		*startup*(.text.*)
+		*main*(.text)
+		*main*(.text.*)
+		*system*(.text)
+		*system*(.text.*)
 		*(.text)
 		*(.text.*)
 		*(.rodata)
