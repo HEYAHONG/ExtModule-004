@@ -8,6 +8,7 @@
 #include "lwip/dhcp.h"
 #include "lwip/priv/tcp_priv.h"
 #include "lwip/ethip6.h"
+#include "lwip/apps/sntp.h"
 
 extern volatile uint8_t LinkSta;
 bool hbox_eth_is_linked(void)
@@ -70,14 +71,14 @@ static err_t ethernetif_init(struct netif *netif)
 #if LWIP_NETIF_HOSTNAME
     netif->hostname="ExtModule-004";
 #endif
-    netif->name[0]='E';
-    netif->name[1]='M';
+    netif->name[0]='e';
+    netif->name[1]='m';
     netif->output=etharp_output;
     netif->output_ip6=ethip6_output;
     netif->linkoutput=ethernetif_lowlevel_output;
     netif->hwaddr_len=ETHARP_HWADDR_LEN;
-    netif->mtu=ETH_MAX_PACKET_SIZE;
-    netif->mtu6=ETH_MAX_PACKET_SIZE;
+    netif->mtu=MAX_ETH_PAYLOAD;
+    netif->mtu6=MAX_ETH_PAYLOAD;
     WCHNET_GetMacAddr(netif->hwaddr);
     netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
 
@@ -202,9 +203,38 @@ static void lwip_net_info(void)
     }
 }
 
+static const char *sntp_server_name[]=
+{
+    "ntp.hyhsystem.cn",
+    "ntp.ntsc.ac.cn",
+    "0.cn.pool.ntp.org",
+    "0.pool.ntp.org",
+    "1.cn.pool.ntp.org",
+    "1.pool.ntp.org",
+    "2.cn.pool.ntp.org",
+    "2.pool.ntp.org",
+    "3.cn.pool.ntp.org",
+    "3.pool.ntp.org",
+};
+static void sntp_lowlevel_init(void)
+{
+#if SNTP_SERVER_DNS
+    for(size_t i=0; i<SNTP_MAX_SERVERS; i++)
+    {
+        if(i<sizeof(sntp_server_name)/sizeof(sntp_server_name[0]))
+        {
+            sntp_setservername(i,sntp_server_name[i]);
+        }
+    }
+#endif
+    //启动sntp
+    sntp_init();
+}
+
 static void  hbox_eth_init(const hruntime_function_t *func)
 {
     lwip_lowlevel_init();
+    sntp_lowlevel_init();
 }
 HRUNTIME_INIT_EXPORT(eth,16,hbox_eth_init,NULL);
 
@@ -219,3 +249,74 @@ static void  hbox_eth_loop(const hruntime_function_t *func)
     lwip_net_info();
 }
 HRUNTIME_LOOP_EXPORT(eth,16,hbox_eth_loop,NULL);
+
+static int cmd_ifconfig_entry(int argc,const char *argv[])
+{
+    hshell_context_t * hshell_ctx=hshell_context_get_from_main_argv(argc,argv);
+    if(argc <= 1)
+    {
+        for(uint8_t index=1; index < 254; index++)
+        {
+            struct netif *interface=netif_get_by_index(index);
+            if(interface!=NULL)
+            {
+                {
+                    char ifname[NETIF_NAMESIZE]= {0};
+                    netif_index_to_name(index,ifname);
+#if LWIP_IPV6 && LWIP_ND6_ALLOW_RA_UPDATES
+                    hshell_printf(hshell_ctx,"%s: flags=%d mtu %d mtu6 %d\r\n",ifname,(int)interface->flags,(int)interface->mtu,(int)interface->mtu6);
+#else
+                    hshell_printf(hshell_ctx,"%s: flags=%d mtu %d\r\n",(int)interface->flags,(int)interface->mtu);
+#endif
+                }
+#if             LWIP_IPV4
+                {
+                    char ip_str[32]= {0};
+                    ipaddr_ntoa_r(&interface->ip_addr,ip_str,sizeof(ip_str));
+                    char gw_str[32]= {0};
+                    ipaddr_ntoa_r(&interface->gw,gw_str,sizeof(gw_str));
+                    char netmask_str[32]= {0};
+                    ipaddr_ntoa_r(&interface->netmask,netmask_str,sizeof(netmask_str));
+                    hshell_printf(hshell_ctx,"\tinet %s netmask %s gateway %s\r\n",ip_str,netmask_str,gw_str);
+                }
+#endif
+            }
+        }
+    }
+    else
+    {
+        {
+            struct netif *interface=netif_find(argv[1]);
+            if(interface!=NULL)
+            {
+                {
+                    char ifname[NETIF_NAMESIZE]= {0};
+                    netif_index_to_name(netif_get_index(interface),ifname);
+#if LWIP_IPV6 && LWIP_ND6_ALLOW_RA_UPDATES
+                    hshell_printf(hshell_ctx,"%s: flags=%d mtu %d mtu6 %d\r\n",ifname,(int)interface->flags,(int)interface->mtu,(int)interface->mtu6);
+#else
+                    hshell_printf(hshell_ctx,"%s: flags=%d mtu %d\r\n",(int)interface->flags,(int)interface->mtu);
+#endif
+                }
+#if             LWIP_IPV4
+                {
+                    char ip_str[32]= {0};
+                    ipaddr_ntoa_r(&interface->ip_addr,ip_str,sizeof(ip_str));
+                    char gw_str[32]= {0};
+                    ipaddr_ntoa_r(&interface->gw,gw_str,sizeof(gw_str));
+                    char netmask_str[32]= {0};
+                    ipaddr_ntoa_r(&interface->netmask,netmask_str,sizeof(netmask_str));
+                    hshell_printf(hshell_ctx,"\tinet %s netmask %s gateway %s\r\n",ip_str,netmask_str,gw_str);
+                }
+#endif
+            }
+            else
+            {
+                hshell_printf(hshell_ctx,"No such device %s\r\n",argv[1]);
+            }
+        }
+
+    }
+    return 0;
+};
+HSHELL_COMMAND_EXPORT(ifconfig,cmd_ifconfig_entry,configure a network interface);

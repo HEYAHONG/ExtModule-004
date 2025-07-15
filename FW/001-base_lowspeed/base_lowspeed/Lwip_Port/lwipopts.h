@@ -950,7 +950,7 @@
  * The maximum of NTP servers requested
  */
 #if !defined LWIP_DHCP_MAX_NTP_SERVERS
-#define LWIP_DHCP_MAX_NTP_SERVERS       1
+#define LWIP_DHCP_MAX_NTP_SERVERS       5
 #endif
 
 /**
@@ -1125,7 +1125,7 @@
  * transport.
  */
 #if !defined LWIP_DNS
-#define LWIP_DNS                        0
+#define LWIP_DNS                        1
 #endif
 
 /** DNS maximum number of entries to maintain locally. */
