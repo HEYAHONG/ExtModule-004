@@ -15,6 +15,7 @@ uint32_t sys_now(void);
 /*
  * 用于sntp
  */
+#define SNTP_SERVER_DNS 1
 #define SNTP_GET_SYSTEM_TIME(sec, us) do {  hgettimeofday_timeval_t tv= {0}; hgettimeofday(&tv,NULL); (sec)=tv.tv_sec; (us)=tv.tv_usec;} while(0)
 #define SNTP_SET_SYSTEM_TIME(sec) do { hbox_set_time(sec); console_printf("ntp:set system time!"); } while(0)
 

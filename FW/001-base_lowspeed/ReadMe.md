@@ -91,3 +91,15 @@
 - **无论是接收还是发送，软件中数据帧不包含前同步码与SFD,从目标地址开始。**
 - **默认情况下，本工程中使用`TCP/IP`作为上层协议，但用户也可直接使用原始以太网帧，需要注意帧类型不能与常用的帧类型重合，否则可能引起混乱。**
 
+## TCP/IP
+
+默认情况下,采用[lwip](https://savannah.nongnu.org/projects/lwip/)作为TCP/IP栈，本工程中特点如下：
+
+- 运行于`NO_SYS`模式（只能使用`raw api`）。
+- 默认启用IPV4与IPV6双栈。
+- IPV6默认启用`linklocal`地址，可使用TCP/IP在无配置( 无需路由)的情况下直接通信，这对设备的初始配置十分有用。
+- 默认启用DHCP（IPV4与IPV6均启用），其中DHCP6采用无状态DHCP。
+- 默认启用SNTP,可用于获取网络时间。
+
+详细文档见[lwip_master.pdf](../../Doc/lwip_master.pdf)。
+
