@@ -184,38 +184,6 @@ bool hbox_eth_transmit(const uint8_t *data,size_t data_length)
     return ETH_SUCCESS==MACRAW_Tx((uint8_t *)data,data_length);
 }
 
-static void lwip_net_info(void)
-{
-    static bool is_dhcp_ok=false;
-    if(netif_is_up(&lwip_netif))
-    {
-        //打印DHCP IP
-        bool is_dhcp_ok_temp=(0!=dhcp_supplied_address(&lwip_netif));
-        if(is_dhcp_ok_temp!=is_dhcp_ok && is_dhcp_ok_temp==true)
-        {
-            is_dhcp_ok=is_dhcp_ok_temp;
-            {
-                char buff[32]= {0};
-                ipaddr_ntoa_r(&lwip_netif.ip_addr,buff,sizeof(buff));
-                console_printf("eth:ip=%s",buff);
-            }
-            {
-                char buff[32]= {0};
-                ipaddr_ntoa_r(&lwip_netif.gw,buff,sizeof(buff));
-                console_printf("eth:gateway=%s",buff);
-            }
-            {
-                char buff[32]= {0};
-                ipaddr_ntoa_r(&lwip_netif.netmask,buff,sizeof(buff));
-                console_printf("eth:netmask=%s",buff);
-            }
-        }
-    }
-    else
-    {
-        is_dhcp_ok=false;
-    }
-}
 
 static const char *sntp_server_name[]=
 {
@@ -260,7 +228,6 @@ static void  hbox_eth_loop(const hruntime_function_t *func)
     }
     WCHNET_MainTask();
     sys_check_timeouts();
-    lwip_net_info();
 }
 HRUNTIME_LOOP_EXPORT(eth,16,hbox_eth_loop,NULL);
 
