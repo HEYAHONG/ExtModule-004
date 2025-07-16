@@ -163,7 +163,7 @@
  * Your system should provide mutexes supporting priority inversion to use this.
  */
 #if !defined LWIP_TCPIP_CORE_LOCKING
-#define LWIP_TCPIP_CORE_LOCKING         0
+#define LWIP_TCPIP_CORE_LOCKING         1
 #endif
 
 /**
@@ -175,7 +175,7 @@
  * interrupt context!
  */
 #if !defined LWIP_TCPIP_CORE_LOCKING_INPUT
-#define LWIP_TCPIP_CORE_LOCKING_INPUT   0
+#define LWIP_TCPIP_CORE_LOCKING_INPUT   1
 #endif
 
 /**

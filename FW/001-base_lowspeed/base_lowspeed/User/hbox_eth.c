@@ -6,6 +6,7 @@
 #include "netif/etharp.h"
 #include "lwip/tcpip.h"
 #include "lwip/dhcp.h"
+#include "lwip/dhcp6.h"
 #include "lwip/priv/tcp_priv.h"
 #include "lwip/ethip6.h"
 #include "lwip/apps/sntp.h"
@@ -80,7 +81,11 @@ static err_t ethernetif_init(struct netif *netif)
     netif->mtu=MAX_ETH_PAYLOAD;
     netif->mtu6=MAX_ETH_PAYLOAD;
     WCHNET_GetMacAddr(netif->hwaddr);
-    netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
+    netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP | NETIF_FLAG_ETHERNET | NETIF_FLAG_IGMP | NETIF_FLAG_MLD6;
+#if LWIP_IPV6
+    //创建IPV6 Linklocal地址（可用于没有分配到ip时的本地通信）
+    netif_create_ip6_linklocal_address(netif,1);
+#endif
 
     /*
      * 初始化以太网
@@ -120,6 +125,12 @@ static void hbox_update_linked_state(void)
         {
             console_printf("eth:start dhcp!");
         }
+#if     LWIP_IPV6_DHCP6
+        if(ERR_OK==dhcp6_enable_stateless(&lwip_netif))
+        {
+            console_printf("eth:start dhcpv6(stateless)!");
+        }
+#endif
     }
     else
     {
@@ -127,6 +138,9 @@ static void hbox_update_linked_state(void)
          * 启动DHCP
          */
         dhcp_stop(&lwip_netif);
+#if     LWIP_IPV6_DHCP6
+        dhcp6_disable(&lwip_netif);
+#endif
         netif_set_down(&lwip_netif);
     }
     /*
@@ -280,6 +294,22 @@ static int cmd_ifconfig_entry(int argc,const char *argv[])
                     hshell_printf(hshell_ctx,"\tinet %s netmask %s gateway %s\r\n",ip_str,netmask_str,gw_str);
                 }
 #endif
+#if             LWIP_IPV6
+                {
+                    for(size_t i=0; i<LWIP_IPV6_NUM_ADDRESSES; i++)
+                    {
+                        if(ip6_addr_isvalid(netif_ip6_addr_state(interface,i)))
+                        {
+                            {
+                                char addr_str[96]= {0};
+                                ipaddr_ntoa_r(&interface->ip6_addr[i],addr_str,sizeof(addr_str));
+                                hshell_printf(hshell_ctx,"\tinet6 %s \r\n",addr_str);
+                            }
+                        }
+                    }
+                }
+#endif
+                hshell_printf(hshell_ctx,"\tether %02X:%02X:%02X:%02X:%02X:%02X \r\n",(int)interface->hwaddr[0],(int)interface->hwaddr[1],(int)interface->hwaddr[2],(int)interface->hwaddr[3],(int)interface->hwaddr[4],(int)interface->hwaddr[5]);
             }
         }
     }
@@ -309,6 +339,22 @@ static int cmd_ifconfig_entry(int argc,const char *argv[])
                     hshell_printf(hshell_ctx,"\tinet %s netmask %s gateway %s\r\n",ip_str,netmask_str,gw_str);
                 }
 #endif
+#if             LWIP_IPV6
+                {
+                    for(size_t i=0; i<LWIP_IPV6_NUM_ADDRESSES; i++)
+                    {
+                        if(ip6_addr_isvalid(netif_ip6_addr_state(interface,i)))
+                        {
+                            {
+                                char addr_str[96]= {0};
+                                ipaddr_ntoa_r(&interface->ip6_addr[i],addr_str,sizeof(addr_str));
+                                hshell_printf(hshell_ctx,"\tinet6 %s \r\n",addr_str);
+                            }
+                        }
+                    }
+                }
+#endif
+                hshell_printf(hshell_ctx,"\tether %02X:%02X:%02X:%02X:%02X:%02X \r\n",(int)interface->hwaddr[0],(int)interface->hwaddr[1],(int)interface->hwaddr[2],(int)interface->hwaddr[3],(int)interface->hwaddr[4],(int)interface->hwaddr[5]);
             }
             else
             {
