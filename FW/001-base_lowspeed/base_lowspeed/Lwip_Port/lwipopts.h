@@ -1130,12 +1130,12 @@
 
 /** DNS maximum number of entries to maintain locally. */
 #if !defined DNS_TABLE_SIZE
-#define DNS_TABLE_SIZE                  4
+#define DNS_TABLE_SIZE                  8
 #endif
 
 /** DNS maximum host name length supported in the name table. */
 #if !defined DNS_MAX_NAME_LENGTH
-#define DNS_MAX_NAME_LENGTH             256
+#define DNS_MAX_NAME_LENGTH             64
 #endif
 
 /** The maximum of DNS servers
