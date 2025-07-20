@@ -16,6 +16,7 @@ void udp_devcfg_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
         {
             pbuf_free(p);
         }
+        return;
     }
 
     size_t length=p->tot_len;
