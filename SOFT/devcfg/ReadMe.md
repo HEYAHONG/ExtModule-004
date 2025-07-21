@@ -18,8 +18,16 @@ windows下可使用`ipconfig`获取IP信息。
 
 ![windows_ipconfig_zone_id](windows_ipconfig_zone_id.png)
 
+## Linux
+
+linux可使用`ip addr`获取信息。
+
+![linux_ip_addr_zone_id](linux_ip_addr_zone_id.png)
+
 # 测试
 
 ## 设备检测
 
 ![windows_devcfg_detect_device](windows_devcfg_detect_device.jpg)
+
+![linux_devcfg_detect_device](linux_devcfg_detect_device.png)

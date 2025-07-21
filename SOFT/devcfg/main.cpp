@@ -1,4 +1,4 @@
-﻿#include "HCppBox.h"
+﻿#include "HCPPBox.h"
 #include "hrc.h"
 #include H3RDPARTY_ARGTABLE3_HEADER
 #include "string"
@@ -73,12 +73,12 @@ static void detect_device(void)
     }
     {
         /*
-         * 在本地节点广播消息
+         * 在本地链路广播消息
          */
         const char *buffer=DEVCFG_HELLO_MESSAGE;
         HCPPSocketAddressIPV6 boardcast_addr= {0};
         boardcast_addr.sin6_family=AF_INET6;
-        inet_pton(AF_INET6,"FF01::1",&boardcast_addr.sin6_addr);
+        inet_pton(AF_INET6,"FF02::1",&boardcast_addr.sin6_addr);
         boardcast_addr.sin6_port=htons(UDP_DEVCFG_PORT);
         boardcast_addr.sin6_scope_id=zone_id;
         size_t len=strlen(buffer);
