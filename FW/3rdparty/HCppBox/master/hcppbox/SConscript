@@ -1,0 +1,36 @@
+from building import *
+import os
+import sys
+
+#默认不启用此组件
+Enable_HCPPBox=False
+
+if  "Enable_HCPPBox" in Env:
+    Enable_HCPPBox=True
+
+if  "Enable_HCPPBox" in os.environ:
+    Enable_HCPPBox=True
+
+if not Enable_HCPPBox:
+   group = []
+   Return('group')
+
+cwd = GetCurrentDir()
+src = Glob('*.c')
+src += Glob('*.cpp')
+CPPPATH = [
+cwd,
+]
+
+LIBS=[]
+if  sys.platform.startswith("win32") or  sys.platform.startswith("cygwin"):
+    LIBS += ["ws2_32"]
+
+group = DefineGroup('HCPPBox', src, depend = [''], CPPPATH = CPPPATH,LIBS=LIBS)
+
+list = os.listdir(cwd)
+for item in list:
+    if os.path.isfile(os.path.join(cwd, item, 'SConscript')):
+        group = group + SConscript(os.path.join(item, 'SConscript'))
+
+Return('group')
