@@ -97,7 +97,7 @@ static void detect_device(void)
             socklen_t addr_len=sizeof(addr);
             if(recvfrom(udp_fd,buffer,sizeof(buffer)-1,0,(HCPPSocketAddress *)&addr,&addr_len) > 0)
             {
-                if(addr_len==sizeof(addr) || strcmp(DEVCFG_HELLO_MESSAGE,buffer)==0)
+                if(addr_len==sizeof(addr) && strcmp(DEVCFG_HELLO_MESSAGE,buffer)==0)
                 {
                     dev_list.push_back(addr);
                     char ip_str[256]= {0};
