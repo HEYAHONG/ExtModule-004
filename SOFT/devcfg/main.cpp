@@ -70,6 +70,9 @@ static void main_arg_parse(int argc,char *argv[])
 
 #if defined(HDEFAULTS_OS_WINDOWS)
 #include "iphlpapi.h"
+#else
+#include "ifaddrs.h"
+#include "net/if.h"
 #endif
 
 static void list_net_interfaces(void)
@@ -105,6 +108,27 @@ static void list_net_interfaces(void)
             }
         }
         delete [] addr;
+    }
+#else
+    {
+        struct ifaddrs *addr_list=NULL;
+        getifaddrs(&addr_list);
+        if(addr_list!=NULL)
+        {
+            hprintf("-ZoneID-\t----Name(Addr)----\r\n");
+            struct ifaddrs * current_addr=addr_list;
+            while(current_addr!=NULL)
+            {
+                if(current_addr->ifa_addr->sa_family==AF_INET6)
+                {
+                    char ip_str[256]= {0};
+                    inet_ntop(AF_INET6,&((HCPPSocketAddressIPV6 *)current_addr->ifa_addr)->sin6_addr,ip_str,sizeof(ip_str)-1);
+                    hprintf("%-08d\t%s(%s)\r\n",if_nametoindex(current_addr->ifa_name),current_addr->ifa_name,ip_str);
+                }
+                current_addr=current_addr->ifa_next;
+            }
+            freeifaddrs(addr_list);
+        }
     }
 #endif
 }

@@ -36,3 +36,5 @@ linux可使用`ip addr`获取信息。
 ## 列出网络接口
 
 ![windows_devcfg_list_net_interfaces](windows_devcfg_list_net_interfaces.jpg)
+
+![linux_devcfg_list_net_interfaces](linux_devcfg_list_net_interfaces.png)
