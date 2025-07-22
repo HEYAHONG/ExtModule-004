@@ -13,6 +13,9 @@ endif()
 
 file(GLOB C_CXX_FILES *.h *.cpp *.c *.hpp *.cxx)
 add_executable(${PROJECT_NAME}  ${C_CXX_FILES})
+if(WIN32)
+target_link_libraries(${PROJECT_NAME}  iphlpapi)
+endif()
 #添加线程库
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME}  ${CMAKE_THREAD_LIBS_INIT})

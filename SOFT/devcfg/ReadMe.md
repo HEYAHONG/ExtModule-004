@@ -7,6 +7,7 @@
 现有以下功能:
 
 - 检测设备
+- 列出网络接口
 
 # IPV6 Zone
 
@@ -31,3 +32,7 @@ linux可使用`ip addr`获取信息。
 ![windows_devcfg_detect_device](windows_devcfg_detect_device.jpg)
 
 ![linux_devcfg_detect_device](linux_devcfg_detect_device.png)
+
+## 列出网络接口
+
+![windows_devcfg_list_net_interfaces](windows_devcfg_list_net_interfaces.jpg)

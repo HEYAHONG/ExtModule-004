@@ -7,14 +7,17 @@
 #define UDP_DEVCFG_PORT 4
 
 static int zone_id=0;
+static void list_net_interfaces(void);
 static void main_arg_parse(int argc,char *argv[])
 {
     struct arg_lit  *nologo=NULL;
+    struct arg_lit  *list_if=NULL;
     struct arg_int  *scope_id=NULL;
     void *argtable[]=
     {
         nologo=arg_lit0("N","nologo","hide logo"),
-        scope_id=arg_int1("Z","zone","scope_id","zone id"),
+        list_if=arg_lit0("L","list","list net interfaces"),
+        scope_id=arg_int0("Z","zone","scope_id","zone id"),
         arg_end(20)
     };
     if(arg_nullcheck(argtable)!=0)
@@ -43,14 +46,69 @@ static void main_arg_parse(int argc,char *argv[])
 
     }
 
+    if(list_if->count > 0)
+    {
+        list_net_interfaces();
+        hexit(0);
+    }
+
     if(scope_id->count>0)
     {
         zone_id=scope_id->ival[0];
+    }
+    else
+    {
+        hfputs("Zone must be specified!\r\n",stderr);
+        hfputs("Usage:\r\n",stderr);
+        arg_print_glossary(stderr,argtable,"  %-25s %s\n");
+        hexit(-1);
     }
 
     arg_freetable(argtable,sizeof(argtable)/sizeof(argtable[0]));
 
 }
+
+#if defined(HDEFAULTS_OS_WINDOWS)
+#include "iphlpapi.h"
+#endif
+
+static void list_net_interfaces(void)
+{
+#if defined(HDEFAULTS_OS_WINDOWS)
+    {
+        IP_ADAPTER_ADDRESSES * addr=new IP_ADAPTER_ADDRESSES[4096];
+        ULONG addr_size=sizeof(IP_ADAPTER_ADDRESSES)*4096;
+        if(ERROR_SUCCESS==GetAdaptersAddresses(AF_INET6,0,NULL,addr,&addr_size))
+        {
+            hprintf("-ZoneID-\t----Name----\r\n");
+            PIP_ADAPTER_ADDRESSES current_addr=addr;
+            while(current_addr!=NULL)
+            {
+                if((current_addr->IfType == IF_TYPE_ETHERNET_CSMACD || current_addr->IfType == IF_TYPE_IEEE80211) && current_addr->Ipv6Enabled)
+                {
+                    char ifname[4096]= {0};
+                    if(hlocale_charset_is_utf8())
+                    {
+                        hunicode_char_t buff[4096]= {0};
+                        hunicode_char_from_wchar_string(buff,(sizeof(buff)/sizeof(buff[0]))-1,current_addr->FriendlyName);
+                        hunicode_char_string_to_utf8(ifname,sizeof(ifname)-1,buff);
+                    }
+                    else
+                    {
+                        hunicode_char_t buff[4096]= {0};
+                        hunicode_char_from_wchar_string(buff,(sizeof(buff)/sizeof(buff[0]))-1,current_addr->FriendlyName);
+                        hgb2312_string_from_unicode(ifname,sizeof(ifname)-1,buff,hunicode_char_string_length(buff));
+                    }
+                    hprintf("%-08d\t%s\r\n",current_addr->Ipv6IfIndex,ifname);
+                }
+                current_addr=current_addr->Next;
+            }
+        }
+        delete [] addr;
+    }
+#endif
+}
+
 
 std::vector<HCPPSocketAddressIPV6> dev_list;
 
