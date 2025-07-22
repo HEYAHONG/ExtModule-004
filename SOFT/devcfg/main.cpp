@@ -119,6 +119,13 @@ static void list_net_interfaces(void)
             struct ifaddrs * current_addr=addr_list;
             while(current_addr!=NULL)
             {
+                if(current_addr->ifa_addr==NULL || current_addr->ifa_name==NULL)
+                {
+                    /*
+                     * 某些情况下可能没有地址
+                     */
+                    break;
+                }
                 if(current_addr->ifa_addr->sa_family==AF_INET6)
                 {
                     char ip_str[256]= {0};
