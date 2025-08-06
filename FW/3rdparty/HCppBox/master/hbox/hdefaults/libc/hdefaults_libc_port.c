@@ -27,8 +27,11 @@
 #include "wrapper/hexit.c"
 #include "wrapper/hfputs.c"
 #include "wrapper/hvfprintf.c"
+#include "wrapper/hfprintf.c"
 #include "wrapper/hputs.c"
 #include "wrapper/hferror.c"
 #include "wrapper/hfread.c"
 #include "wrapper/hfwrite.c"
+#include "wrapper/htime.c"
+#include "wrapper/hclock.c"
 

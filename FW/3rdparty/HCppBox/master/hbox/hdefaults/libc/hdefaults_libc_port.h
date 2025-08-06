@@ -25,10 +25,13 @@ extern "C"
 #include "wrapper/hexit.h"
 #include "wrapper/hfputs.h"
 #include "wrapper/hvfprintf.h"
+#include "wrapper/hfprintf.h"
 #include "wrapper/hputs.h"
 #include "wrapper/hferror.h"
 #include "wrapper/hfread.h"
 #include "wrapper/hfwrite.h"
+#include "wrapper/htime.h"
+#include "wrapper/hclock.h"
 
 #ifdef __cplusplus
 }
