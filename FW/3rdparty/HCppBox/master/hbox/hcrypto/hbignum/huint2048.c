@@ -496,7 +496,17 @@ size_t huint2048_clz(const huint2048_t *dst)
 {
     if(dst!=NULL)
     {
-        for(size_t i=0; i < HUINT2048_BITS_COUNT; i++)
+        size_t index_start=0;
+        for(size_t i=0; i<sizeof(dst->val)/sizeof(dst->val[0]); i++)
+        {
+            if(dst->val[sizeof(dst->val)/sizeof(dst->val[0])-1-i]!=0)
+            {
+                break;
+            }
+            index_start+=(sizeof(dst->val[0])*8);
+        }
+
+        for(size_t i=index_start; i < HUINT2048_BITS_COUNT; i++)
         {
             if(huint2048_bit(dst,HUINT2048_BITS_COUNT-1-i))
             {
@@ -512,7 +522,17 @@ size_t huint2048_ctz(const huint2048_t *dst)
 {
     if(dst!=NULL)
     {
-        for(size_t i=0; i < HUINT2048_BITS_COUNT; i++)
+        size_t index_start=0;
+        for(size_t i=0; i<sizeof(dst->val)/sizeof(dst->val[0]); i++)
+        {
+            if(dst->val[i]!=0)
+            {
+                break;
+            }
+            index_start+=(sizeof(dst->val[0])*8);
+        }
+
+        for(size_t i=index_start; i < HUINT2048_BITS_COUNT; i++)
         {
             if(huint2048_bit(dst,i))
             {
@@ -522,6 +542,60 @@ size_t huint2048_ctz(const huint2048_t *dst)
     }
 
     return HUINT2048_BITS_COUNT;
+}
+
+bool huint2048_t_is_zero(const huint2048_t * src)
+{
+    bool ret=false;
+    if(src==NULL)
+    {
+        return ret;
+    }
+    for(size_t i=0; i< sizeof(src->val)/sizeof(src->val[0]); i++)
+    {
+        if(i==0)
+        {
+            ret=(src->val[0]==0);
+        }
+        else
+        {
+            ret=(src->val[i]==0);
+        }
+
+        if(!ret)
+        {
+            break;
+        }
+    }
+
+    return ret;
+}
+
+bool huint2048_t_is_one(const huint2048_t * src)
+{
+    bool ret=false;
+    if(src==NULL)
+    {
+        return ret;
+    }
+    for(size_t i=0; i< sizeof(src->val)/sizeof(src->val[0]); i++)
+    {
+        if(i==0)
+        {
+            ret=(src->val[0]==1);
+        }
+        else
+        {
+            ret=(src->val[i]==0);
+        }
+
+        if(!ret)
+        {
+            break;
+        }
+    }
+
+    return ret;
 }
 
 void huint2048_add(huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2)
@@ -562,17 +636,60 @@ void huint2048_mul(huint2048_t *state,huint2048_t *dst,const huint2048_t *src1,c
     }
 
     huint2048_load_uint32(dst,0);
-    size_t clz=huint2048_clz(src2);
-    size_t ctz=huint2048_ctz(src2);
-    for(size_t i=ctz; i < (HUINT2048_BITS_COUNT-clz); i++)
+    size_t max_index=0;
+    size_t min_index=0;
+    for(size_t i=0; i<sizeof(src2->val)/sizeof(src2->val[0]); i++)
     {
-        if(huint2048_bit(src2,i))
+        if(src2->val[i]!=0)
         {
-            //当前位是1, src1左移后累加至结果
-            huint2048_left_shift(state,src1,i);
-            huint2048_add(dst,dst,state);
+            min_index=i;
+            break;
         }
     }
+    for(size_t i=0; i<sizeof(src2->val)/sizeof(src2->val[0]); i++)
+    {
+        if(src2->val[sizeof(src2->val)/sizeof(src2->val[0])-1-i]!=0)
+        {
+            max_index=sizeof(src2->val)/sizeof(src2->val[0])-1-i;
+            break;
+        }
+    }
+    for(size_t i=min_index; i<=max_index; i++)
+    {
+        uint64_t temp=0;
+        for(size_t k=0; k<i; k++)
+        {
+            state->val[k]=0;
+        }
+        for(size_t j=0; j<(sizeof(src1->val)/sizeof(src1->val[0])); j++)
+        {
+            if(i+j >= (sizeof(state->val)/sizeof(state->val[0])))
+            {
+                break;
+            }
+            temp+=src1->val[j]*((uint64_t)src2->val[i]);
+            state->val[i+j]=temp;
+            temp>>=(sizeof(state->val[0])*8);
+        }
+        huint2048_add(dst,dst,state);
+    }
+}
+
+void huint2048_mul_with_stack(huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2)
+{
+    huint2048_t state;
+
+    huint2048_mul(&state,dst,src1,src2);
+}
+
+void huint2048_mul_with_external_state(huint2048_state_t *state,huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2)
+{
+    if(state==NULL)
+    {
+        return;
+    }
+
+    huint2048_mul(&state->state[0],dst,src1,src2);
 }
 
 void huint2048_div(huint2048_t *state,huint2048_t *state1,huint2048_t *state2,huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2)
@@ -584,7 +701,7 @@ void huint2048_div(huint2048_t *state,huint2048_t *state1,huint2048_t *state2,hu
 
 
     huint2048_load_uint32(dst,0);
-    if(huint2048_compare(src2,state)==0 )
+    if(huint2048_compare(src2,dst)==0 )
     {
         huint2048_load_uint32(state,0);
         //除0错误
@@ -610,17 +727,22 @@ void huint2048_div(huint2048_t *state,huint2048_t *state1,huint2048_t *state2,hu
     }
 
     huint2048_copy(state,src1);
-
+    size_t last_index=0;
+    huint2048_left_shift(state1,src2,(clz2-clz1)-last_index);
     for(size_t i=0; i<= clz2-clz1; i++)
     {
-        huint2048_left_shift(state1,src2,(clz2-clz1)-i);
+        huint2048_right_shift_internal(state1,state1,i-last_index);
+        last_index=i;
         if(huint2048_compare(state,state1) >= 0)
         {
             //被除数大于左移后的除数，直接相减并将相应位置1
-            huint2048_sub(state2,state,state1);
+            {
+                //求补码
+                huint2048_complement(state2,state1);
+                //对补码进行加
+                huint2048_add(state,state,state2);
+            }
             huint2048_bit_set(dst,(clz2-clz1)-i);
-            //余数保存至state
-            huint2048_copy(state,state2);
         }
     }
 
@@ -633,6 +755,19 @@ void huint2048_div_with_stack(huint2048_t *mod,huint2048_t *dst,const huint2048_
     if(mod!=NULL)
     {
         huint2048_copy(mod,&state[0]);
+    }
+}
+
+void huint2048_div_with_external_state(huint2048_state_t * state,huint2048_t *mod,huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2)
+{
+    if(state==NULL)
+    {
+        return;
+    }
+    huint2048_div(&state->state[0],&state->state[1],&state->state[2],dst,src1,src2);
+    if(mod!=NULL)
+    {
+        huint2048_copy(mod,&state->state[0]);
     }
 }
 
@@ -679,6 +814,70 @@ void huint2048_power_with_stack(huint2048_t *dst,const huint2048_t *src1,const h
 {
     huint2048_t state[3]= {0};
     huint2048_power(&state[0],&state[1],&state[2],dst,src1,src2);
+}
+
+void huint2048_power_with_external_state(huint2048_state_t * state,huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2)
+{
+    if(state==NULL)
+    {
+        return;
+    }
+    huint2048_power(&state->state[0],&state->state[1],&state->state[2],dst,src1,src2);
+}
+
+void huint2048_root(huint2048_t *state,huint2048_t *state1,huint2048_t *state2,huint2048_t *state3,huint2048_t *state4,huint2048_t *dst,const huint2048_t *src,size_t index)
+{
+    if(state==NULL || state1==NULL || state2==NULL || state3==NULL || state4==NULL || dst==NULL || src==NULL || index == 0)
+    {
+        return;
+    }
+
+    if(index==1)
+    {
+        huint2048_copy(dst,src);
+        return;
+    }
+
+    huint2048_load_uint32(dst,0);
+    huint2048_load_uint64(state4,index);
+
+    size_t dst_max_bit=(HUINT2048_BITS_COUNT-huint2048_clz(src)+index-1)/index;
+
+    if(dst_max_bit*index > HUINT2048_BITS_COUNT)
+    {
+        dst_max_bit--;
+    }
+
+    for(size_t i=0; i<=dst_max_bit; i++)
+    {
+        huint2048_bit_set(dst,dst_max_bit-i);
+        huint2048_power(state,state1,state2,state3,dst,state4);
+        int compare_ret=huint2048_compare(state3,src);
+        if(compare_ret == 0)
+        {
+            break;
+        }
+        if(compare_ret > 0)
+        {
+            huint2048_bit_clear(dst,dst_max_bit-i);
+        }
+    }
+
+}
+
+void huint2048_root_with_stack(huint2048_t *dst,const huint2048_t *src,size_t index)
+{
+    huint2048_t state[5];
+    huint2048_root(&state[0],&state[1],&state[2],&state[3],&state[4],dst,src,index);
+}
+
+void huint2048_root_with_external_state(huint2048_state_t * state,huint2048_t *dst,const huint2048_t *src,size_t index)
+{
+    if(state==NULL)
+    {
+        return;
+    }
+    huint2048_root(&state->state[0],&state->state[1],&state->state[2],&state->state[3],&state->state[4],dst,src,index);
 }
 
 void huint2048_power_mod(huint2048_t *state,huint2048_t *state1,huint2048_t *state2,huint2048_t *state3,huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2,const huint2048_t *src3)
@@ -730,4 +929,172 @@ void huint2048_power_mod_with_stack(huint2048_t *dst,const huint2048_t *src1,con
 {
     huint2048_t state[4]= {0};
     huint2048_power_mod(&state[0],&state[1],&state[2],&state[3],dst,src1,src2,src3);
+}
+
+void huint2048_power_mod_with_external_state(huint2048_state_t * state,huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2,const huint2048_t *src3)
+{
+    if(state==NULL)
+    {
+        return;
+    }
+    huint2048_power_mod(&state->state[0],&state->state[1],&state->state[2],&state->state[3],dst,src1,src2,src3);
+}
+
+void huint2048_gcd(huint2048_state_t * state,huint2048_t *dst,const huint2048_t *src1,const huint2048_t *src2)
+{
+    if(state==NULL || dst==NULL || src1==NULL || src2==NULL)
+    {
+        return;
+    }
+    /*
+     * 寄存器6,7分别存储除数与被除数
+     */
+    if(huint2048_compare(src1,src2) >=0)
+    {
+        huint2048_copy(&state->state[7],src1);
+        huint2048_copy(&state->state[6],src2);
+    }
+    else
+    {
+        huint2048_copy(&state->state[6],src1);
+        huint2048_copy(&state->state[7],src2);
+    }
+    /*
+     * 寄存器4,5分别存储商与余数
+     */
+    huint2048_load_uint32(&state->state[5],1);//初始时余数不为0
+    /*
+     * 寄存器3为0寄存器
+     */
+    huint2048_load_uint32(&state->state[3],0);
+    if(huint2048_compare(&state->state[3],&state->state[6])==0)
+    {
+        /*
+         * 当其中一个数为0时,返回较大的数
+         */
+        huint2048_copy(dst,&state->state[7]);
+        return;
+    }
+
+    do
+    {
+        huint2048_div(&state->state[5],&state->state[0],&state->state[1],&state->state[4],&state->state[7],&state->state[6]);
+        /*
+         * 重新设置被除数与除数
+         */
+        huint2048_copy(&state->state[7],&state->state[6]);
+        huint2048_copy(&state->state[6],&state->state[5]);
+    }
+    while(huint2048_compare(&state->state[3],&state->state[5])!=0);
+
+    /*
+     * 返回剩余的数
+     */
+    huint2048_copy(dst,&state->state[7]);
+
+}
+
+size_t huint2048_dec_number_count(huint2048_state_t * state,const huint2048_t *src)
+{
+    size_t dec_number_count=0;
+    if(state==NULL || src==NULL)
+    {
+        return dec_number_count;
+    }
+
+    dec_number_count=0;
+
+    bool is_ok=false;
+    while(!is_ok)
+    {
+        /*
+         * 寄存器6存储10，寄存器7存储10的指数
+         */
+        huint2048_load_uint32(&state->state[6],10);
+        huint2048_load_uint32(&state->state[7],dec_number_count);
+        /*
+         * 寄存器5存储10的指数的结果
+         */
+        huint2048_power_with_external_state(state,&state->state[5],&state->state[6],&state->state[7]);
+
+        /*
+         * 比较大小
+         */
+        switch(huint2048_compare(&state->state[5],src))
+        {
+        case 1:
+        {
+            is_ok=true;
+        }
+        break;
+        case 0:
+        {
+            dec_number_count++;
+            is_ok=true;
+        }
+        break;
+        case -1:
+        {
+            dec_number_count++;
+        }
+        break;
+        case -2:
+        {
+            is_ok=true;
+        }
+        break;
+        default:
+        {
+
+        }
+        break;
+        }
+    }
+
+    return dec_number_count;
+}
+
+size_t huint2048_dec_number(huint2048_state_t * state,const huint2048_t *src,size_t index)
+{
+    size_t dec_number=0;
+    if(state==NULL || src==NULL)
+    {
+        return dec_number;
+    }
+
+    /*
+     * 寄存器6存储10，寄存器7存储10的指数
+     */
+    huint2048_load_uint32(&state->state[6],10);
+    huint2048_load_uint32(&state->state[7],index);
+    /*
+     * 寄存器5存储10的指数的结果
+     */
+    huint2048_power_with_external_state(state,&state->state[5],&state->state[6],&state->state[7]);
+    /*
+     * 第一次除法
+     */
+    huint2048_copy(&state->state[7],&state->state[5]);
+    huint2048_div_with_external_state(state,&state->state[4],&state->state[5],src,&state->state[7]);
+
+    huint2048_copy(&state->state[4],&state->state[5]);
+
+    /*
+     * 寄存器6存储10，寄存器7存储10的指数
+     */
+    huint2048_load_uint32(&state->state[7],1);
+    huint2048_power_with_external_state(state,&state->state[5],&state->state[6],&state->state[7]);
+
+    /*
+     * 第二次除法
+     */
+    huint2048_copy(&state->state[6],&state->state[4]);
+    huint2048_copy(&state->state[7],&state->state[5]);
+    huint2048_div_with_external_state(state,&state->state[4],&state->state[5],&state->state[6],&state->state[7]);
+
+    uint32_t result=0;
+    huint2048_store_uint32(&state->state[4],&result);
+    dec_number=result;
+
+    return dec_number;
 }

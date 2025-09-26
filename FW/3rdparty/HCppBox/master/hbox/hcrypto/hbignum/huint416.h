@@ -215,6 +215,23 @@ size_t huint416_clz(const huint416_t *dst);
  */
 size_t huint416_ctz(const huint416_t *dst);
 
+
+/** \brief 判断大数是否为0
+ *
+ * \param src const huint416_t* 源大数
+ * \return bool 是否为0（源大数为空时返回false）
+ *
+ */
+bool huint416_t_is_zero(const huint416_t * src);
+
+/** \brief 判断大数是否为1
+ *
+ * \param src const huint416_t* 源大数
+ * \return bool 是否为1（源大数为空时返回false）
+ *
+ */
+bool huint416_t_is_one(const huint416_t * src);
+
 /** \brief 加
  *
  * \param dst huint416_t* 目标大数
@@ -234,6 +251,13 @@ void huint416_add(huint416_t *dst,const huint416_t *src1,const huint416_t *src2)
  */
 void huint416_sub(huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
 
+
+typedef struct huint416_state huint416_state_t;
+struct huint416_state
+{
+    huint416_t state[8];        /**< 固定采用8个寄存器 */
+};
+
 /** \brief 乘
  *
  * \param state huint416_t* 状态值，用于中间状态存储,不可为空
@@ -243,6 +267,25 @@ void huint416_sub(huint416_t *dst,const huint416_t *src1,const huint416_t *src2)
  *
  */
 void huint416_mul(huint416_t *state,huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
+
+/** \brief 乘(采用栈作为临时变量存储)
+ *
+ * \param dst huint416_t* 目标大数,dst=src1*src2
+ * \param src1 const huint416_t* 源大数1
+ * \param src2 const huint416_t* 源大数2
+ *
+ */
+void huint416_mul_with_stack(huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
+
+/** \brief 乘(外部分配的状态寄存器)
+ *
+ * \param state huint416_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint416_t* 目标大数,dst=src1*src2
+ * \param src1 const huint416_t* 源大数1
+ * \param src2 const huint416_t* 源大数2
+ *
+ */
+void huint416_mul_with_external_state(huint416_state_t *state,huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
 
 
 /** \brief 除
@@ -266,6 +309,17 @@ void huint416_div(huint416_t *state,huint416_t *state1,huint416_t *state2,huint4
  *
  */
 void huint416_div_with_stack(huint416_t *mod,huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
+
+/** \brief 除(外部分配的状态寄存器)
+ *
+ * \param state huint416_state_t * 状态值，用于中间状态存储,不可为空
+ * \param mod huint416_t* 状态值，存储余数。mod=src1%src2
+ * \param dst huint416_t* 目标大数,dst=src1/src2
+ * \param src1 const huint416_t* 源大数1
+ * \param src2 const huint416_t* 源大数2
+ *
+ */
+void huint416_div_with_external_state(huint416_state_t * state,huint416_t *mod,huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
 
 
 /** \brief 幂函数
@@ -291,6 +345,53 @@ void huint416_power(huint416_t *state,huint416_t *state1,huint416_t *state2,huin
 void huint416_power_with_stack(huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
 
 
+/** \brief 幂函数(外部分配的状态寄存器)
+ *
+ * \param state huint416_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint416_t* 目标大数,dst=src1的src2次方
+ * \param src1 const huint416_t* 源大数1
+ * \param src2 const huint416_t* 源大数2
+ *
+ */
+void huint416_power_with_external_state(huint416_state_t * state,huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
+
+/** \brief 求根
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param state huint416_t* 状态值，用于中间状态存储,不可为空
+ * \param state1 huint416_t* 状态值，用于中间状态存储,不可为空
+ * \param state2 huint416_t* 状态值，用于中间状态存储,不可为空
+ * \param state3 huint416_t* 状态值，用于中间状态存储,不可为空
+ * \param state4 huint416_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint416_t* 目标大数
+ * \param src const huint416_t* 源大数
+ * \param index size_t 指数，不可为0
+ *
+ */
+void huint416_root(huint416_t *state,huint416_t *state1,huint416_t *state2,huint416_t *state3,huint416_t *state4,huint416_t *dst,const huint416_t *src,size_t index);
+
+
+/** \brief 求根(采用栈作为临时变量存储)
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param dst huint416_t* 目标大数
+ * \param src const huint416_t* 源大数
+ * \param index size_t 指数,不可为0
+ *
+ */
+void huint416_root_with_stack(huint416_t *dst,const huint416_t *src,size_t index);
+
+/** \brief 求根(外部分配的状态寄存器)
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param state huint416_state_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint416_t* 目标大数
+ * \param src const huint416_t* 源大数
+ * \param index size_t 指数
+ *
+ */
+void huint416_root_with_external_state(huint416_state_t * state,huint416_t *dst,const huint416_t *src,size_t index);
+
 /** \brief 幂取模函数（常用于RSA等加密算法）
  *
  * \param state huint416_t* 状态值，用于中间状态存储,不可为空
@@ -314,6 +415,49 @@ void huint416_power_mod(huint416_t *state,huint416_t *state1,huint416_t *state2,
  *
  */
 void huint416_power_mod_with_stack(huint416_t *dst,const huint416_t *src1,const huint416_t *src2,const huint416_t *src3);
+
+/** \brief 幂取模函数（常用于RSA等加密算法,外部分配的状态寄存器）
+ *
+ * \param state huint416_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint416_t* 目标大数,dst=src1的src2次方对src3取模
+ * \param src1 const huint416_t* 源大数1
+ * \param src2 const huint416_t* 源大数2
+ * \param src3 const huint416_t* 源大数3
+ *
+ */
+void huint416_power_mod_with_external_state(huint416_state_t * state,huint416_t *dst,const huint416_t *src1,const huint416_t *src2,const huint416_t *src3);
+
+
+/** \brief 辗转向除法
+ *
+ * \param state huint416_state_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint416_t* 目标大数
+ * \param src1 const huint416_t* 源大数1
+ * \param src2 const huint416_t* 源大数2
+ *
+ */
+void huint416_gcd(huint416_state_t * state,huint416_t *dst,const huint416_t *src1,const huint416_t *src2);
+
+/** \brief 获取十进制数的位数（从最高非0位开始计算，通常用于打印）
+ *
+ * 注意：此函数需要注意溢出问题
+ * \param state huint416_state_t* 状态值，用于中间状态存储,不可为空
+ * \param src const huint416_t*  源大数
+ * \return size_t 获取十进制数的位数(从最高非0位开始计算，通常用于打印）
+ *
+ */
+size_t huint416_dec_number_count(huint416_state_t * state,const huint416_t *src);
+
+/** \brief 获取十进制数的位上的值
+ *
+ * 注意：此函数需要注意溢出问题
+ * \param state huint416_state_t* 状态值，用于中间状态存储,不可为空
+ * \param src const huint416_t* 源大数
+ * \param index size_t 引索
+ * \return size_t 十进制位上的值(0~9)
+ *
+ */
+size_t huint416_dec_number(huint416_state_t * state,const huint416_t *src,size_t index);
 
 #ifdef __cplusplus
 }

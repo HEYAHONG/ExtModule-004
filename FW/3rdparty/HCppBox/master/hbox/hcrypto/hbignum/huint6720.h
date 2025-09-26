@@ -215,6 +215,23 @@ size_t huint6720_clz(const huint6720_t *dst);
  */
 size_t huint6720_ctz(const huint6720_t *dst);
 
+
+/** \brief 判断大数是否为0
+ *
+ * \param src const huint6720_t* 源大数
+ * \return bool 是否为0（源大数为空时返回false）
+ *
+ */
+bool huint6720_t_is_zero(const huint6720_t * src);
+
+/** \brief 判断大数是否为1
+ *
+ * \param src const huint6720_t* 源大数
+ * \return bool 是否为1（源大数为空时返回false）
+ *
+ */
+bool huint6720_t_is_one(const huint6720_t * src);
+
 /** \brief 加
  *
  * \param dst huint6720_t* 目标大数
@@ -234,6 +251,13 @@ void huint6720_add(huint6720_t *dst,const huint6720_t *src1,const huint6720_t *s
  */
 void huint6720_sub(huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
 
+
+typedef struct huint6720_state huint6720_state_t;
+struct huint6720_state
+{
+    huint6720_t state[8];        /**< 固定采用8个寄存器 */
+};
+
 /** \brief 乘
  *
  * \param state huint6720_t* 状态值，用于中间状态存储,不可为空
@@ -243,6 +267,25 @@ void huint6720_sub(huint6720_t *dst,const huint6720_t *src1,const huint6720_t *s
  *
  */
 void huint6720_mul(huint6720_t *state,huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
+
+/** \brief 乘(采用栈作为临时变量存储)
+ *
+ * \param dst huint6720_t* 目标大数,dst=src1*src2
+ * \param src1 const huint6720_t* 源大数1
+ * \param src2 const huint6720_t* 源大数2
+ *
+ */
+void huint6720_mul_with_stack(huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
+
+/** \brief 乘(外部分配的状态寄存器)
+ *
+ * \param state huint6720_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint6720_t* 目标大数,dst=src1*src2
+ * \param src1 const huint6720_t* 源大数1
+ * \param src2 const huint6720_t* 源大数2
+ *
+ */
+void huint6720_mul_with_external_state(huint6720_state_t *state,huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
 
 
 /** \brief 除
@@ -266,6 +309,17 @@ void huint6720_div(huint6720_t *state,huint6720_t *state1,huint6720_t *state2,hu
  *
  */
 void huint6720_div_with_stack(huint6720_t *mod,huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
+
+/** \brief 除(外部分配的状态寄存器)
+ *
+ * \param state huint6720_state_t * 状态值，用于中间状态存储,不可为空
+ * \param mod huint6720_t* 状态值，存储余数。mod=src1%src2
+ * \param dst huint6720_t* 目标大数,dst=src1/src2
+ * \param src1 const huint6720_t* 源大数1
+ * \param src2 const huint6720_t* 源大数2
+ *
+ */
+void huint6720_div_with_external_state(huint6720_state_t * state,huint6720_t *mod,huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
 
 
 /** \brief 幂函数
@@ -291,6 +345,53 @@ void huint6720_power(huint6720_t *state,huint6720_t *state1,huint6720_t *state2,
 void huint6720_power_with_stack(huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
 
 
+/** \brief 幂函数(外部分配的状态寄存器)
+ *
+ * \param state huint6720_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint6720_t* 目标大数,dst=src1的src2次方
+ * \param src1 const huint6720_t* 源大数1
+ * \param src2 const huint6720_t* 源大数2
+ *
+ */
+void huint6720_power_with_external_state(huint6720_state_t * state,huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
+
+/** \brief 求根
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param state huint6720_t* 状态值，用于中间状态存储,不可为空
+ * \param state1 huint6720_t* 状态值，用于中间状态存储,不可为空
+ * \param state2 huint6720_t* 状态值，用于中间状态存储,不可为空
+ * \param state3 huint6720_t* 状态值，用于中间状态存储,不可为空
+ * \param state4 huint6720_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint6720_t* 目标大数
+ * \param src const huint6720_t* 源大数
+ * \param index size_t 指数，不可为0
+ *
+ */
+void huint6720_root(huint6720_t *state,huint6720_t *state1,huint6720_t *state2,huint6720_t *state3,huint6720_t *state4,huint6720_t *dst,const huint6720_t *src,size_t index);
+
+
+/** \brief 求根(采用栈作为临时变量存储)
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param dst huint6720_t* 目标大数
+ * \param src const huint6720_t* 源大数
+ * \param index size_t 指数,不可为0
+ *
+ */
+void huint6720_root_with_stack(huint6720_t *dst,const huint6720_t *src,size_t index);
+
+/** \brief 求根(外部分配的状态寄存器)
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param state huint6720_state_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint6720_t* 目标大数
+ * \param src const huint6720_t* 源大数
+ * \param index size_t 指数
+ *
+ */
+void huint6720_root_with_external_state(huint6720_state_t * state,huint6720_t *dst,const huint6720_t *src,size_t index);
+
 /** \brief 幂取模函数（常用于RSA等加密算法）
  *
  * \param state huint6720_t* 状态值，用于中间状态存储,不可为空
@@ -314,6 +415,49 @@ void huint6720_power_mod(huint6720_t *state,huint6720_t *state1,huint6720_t *sta
  *
  */
 void huint6720_power_mod_with_stack(huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2,const huint6720_t *src3);
+
+/** \brief 幂取模函数（常用于RSA等加密算法,外部分配的状态寄存器）
+ *
+ * \param state huint6720_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint6720_t* 目标大数,dst=src1的src2次方对src3取模
+ * \param src1 const huint6720_t* 源大数1
+ * \param src2 const huint6720_t* 源大数2
+ * \param src3 const huint6720_t* 源大数3
+ *
+ */
+void huint6720_power_mod_with_external_state(huint6720_state_t * state,huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2,const huint6720_t *src3);
+
+
+/** \brief 辗转向除法
+ *
+ * \param state huint6720_state_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint6720_t* 目标大数
+ * \param src1 const huint6720_t* 源大数1
+ * \param src2 const huint6720_t* 源大数2
+ *
+ */
+void huint6720_gcd(huint6720_state_t * state,huint6720_t *dst,const huint6720_t *src1,const huint6720_t *src2);
+
+/** \brief 获取十进制数的位数（从最高非0位开始计算，通常用于打印）
+ *
+ * 注意：此函数需要注意溢出问题
+ * \param state huint6720_state_t* 状态值，用于中间状态存储,不可为空
+ * \param src const huint6720_t*  源大数
+ * \return size_t 获取十进制数的位数(从最高非0位开始计算，通常用于打印）
+ *
+ */
+size_t huint6720_dec_number_count(huint6720_state_t * state,const huint6720_t *src);
+
+/** \brief 获取十进制数的位上的值
+ *
+ * 注意：此函数需要注意溢出问题
+ * \param state huint6720_state_t* 状态值，用于中间状态存储,不可为空
+ * \param src const huint6720_t* 源大数
+ * \param index size_t 引索
+ * \return size_t 十进制位上的值(0~9)
+ *
+ */
+size_t huint6720_dec_number(huint6720_state_t * state,const huint6720_t *src,size_t index);
 
 #ifdef __cplusplus
 }

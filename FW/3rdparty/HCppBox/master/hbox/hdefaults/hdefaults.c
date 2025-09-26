@@ -14,6 +14,20 @@
 #ifdef __RTTHREAD__
 #include "rtthread.h"
 #endif // __RTTHREAD__
+#if defined(FREERTOS_KERNEL)
+/*
+ * 由h3rdparty组件引入FreeRTOS代码
+ */
+#include "h3rdparty.h"
+#include FREERTOS_KERNEL_FREERTOS_HEADER
+#include FREERTOS_KERNEL_TASK_HEADER
+#include FREERTOS_KERNEL_TIMERS_HEADER
+#include FREERTOS_KERNEL_QUEUE_HEADER
+#include FREERTOS_KERNEL_SEMPHR_HEADER
+#include FREERTOS_KERNEL_CROUTINE_HEADER
+#include FREERTOS_KERNEL_LIST_HEADER
+#include FREERTOS_KERNEL_EVENT_GROUPS_HEADER
+#endif
 #ifdef WIN32
 #include "windows.h"
 static CRITICAL_SECTION g_mutex_lock;
@@ -51,6 +65,8 @@ static hdefaults_tick_t do_hdefaults_tick_get(void)
 {
 #ifdef HDEFAULTS_TICK_GET
     return HDEFAULTS_TICK_GET();
+#elif defined(FREERTOS_KERNEL)
+    return xTaskGetTickCount();
 #elif defined(HDEFAULTS_OS_RTTHREAD)
     return rt_tick_get_millisecond();
 #elif defined(HDEFAULTS_OS_WINDOWS)
@@ -58,7 +74,7 @@ static hdefaults_tick_t do_hdefaults_tick_get(void)
 #elif defined(HDEFAULTS_OS_UNIX)
 #if defined(CLOCK_MONOTONIC)
     {
-        struct timespec ts={0};
+        struct timespec ts= {0};
         clock_gettime(CLOCK_MONOTONIC,&ts);
         return ts.tv_sec*1000ULL+ts.tv_nsec/1000000ULL;
     }
@@ -84,11 +100,16 @@ extern void* hmemoryheap_malloc(size_t nBytes);
 #ifdef HDEFAULTS_MALLOC
 extern void * HDEFAULTS_MALLOC(size_t bytes);
 #endif // HDEFAULTS_MALLOC
+#if defined(FREERTOS_KERNEL_MEMMANG_HEAP) && defined(FREERTOS_KERNEL)
+extern void * pvPortMalloc( size_t xWantedSize );
+#endif
 static void * do_hdefaults_malloc(size_t nBytes,void *usr)
 {
     UNUSED(usr);
 #ifdef HDEFAULTS_MALLOC
     return HDEFAULTS_MALLOC(nBytes);
+#elif defined(FREERTOS_KERNEL_MEMMANG_HEAP) && defined(FREERTOS_KERNEL)
+    return pvPortMalloc(nBytes);
 #elif defined(__RTTHREAD__)
     return rt_malloc(nBytes);
 #elif defined(USING_HMEMORYHEAP)
@@ -104,11 +125,16 @@ extern void hmemoryheap_free(void*);
 #ifdef HDEFAULTS_FREE
 extern void  HDEFAULTS_FREE(void *ptr);
 #endif // HDEFAULTS_FREE
+#if defined(FREERTOS_KERNEL_MEMMANG_HEAP) && defined(FREERTOS_KERNEL)
+extern void vPortFree( void * pv );
+#endif
 static void do_hdefaults_free(void *ptr,void *usr)
 {
     UNUSED(usr);
 #ifdef HDEFAULTS_FREE
     HDEFAULTS_FREE(ptr);
+#elif defined(FREERTOS_KERNEL_MEMMANG_HEAP) && defined(FREERTOS_KERNEL)
+    vPortFree(ptr);
 #elif defined(__RTTHREAD__)
     rt_free(ptr);
 #elif defined(USING_HMEMORYHEAP)
@@ -129,6 +155,8 @@ static void  do_hdefaults_mutex_lock(void *usr)
     UNUSED(usr);
 #ifdef HDEFAULTS_MUTEX_LOCK
     HDEFAULTS_MUTEX_LOCK();
+#elif defined(FREERTOS_KERNEL)
+    vTaskSuspendAll();
 #elif defined(__RTTHREAD__)
     rt_enter_critical();
 #elif defined(WIN32)
@@ -151,6 +179,8 @@ static void  do_hdefaults_mutex_unlock(void *usr)
     UNUSED(usr);
 #ifdef  HDEFAULTS_MUTEX_UNLOCK
     HDEFAULTS_MUTEX_UNLOCK();
+#elif defined(FREERTOS_KERNEL)
+    xTaskResumeAll();
 #elif defined(__RTTHREAD__)
     rt_exit_critical();
 #elif defined(WIN32)
@@ -164,12 +194,18 @@ static void  do_hdefaults_mutex_unlock(void *usr)
 #endif
 }
 
+extern void *hdlsym(void *handle, const char *name);
+void * do_hdefaults_symbol_find(const char * symbol_name)
+{
+    return hdlsym(NULL,symbol_name);
+}
 
 HDEFAULTS_USERCALL_DECLARE(tick);
 HDEFAULTS_USERCALL_DECLARE(malloc);
 HDEFAULTS_USERCALL_DECLARE(free);
 HDEFAULTS_USERCALL_DECLARE(glock);
 HDEFAULTS_USERCALL_DECLARE(gunlock);
+HDEFAULTS_USERCALL_DECLARE(symbol_find);
 intptr_t do_hdefaults_usercall(uintptr_t number,...)
 {
     intptr_t ret=0;
@@ -212,6 +248,11 @@ intptr_t do_hdefaults_usercall(uintptr_t number,...)
         case HDEFAULTS_USERCALL_NUMBER_GUNLOCK:
         {
             ret=__hdefaults_usercall_gunlock(number,va);
+        }
+        break;
+        case HDEFAULTS_USERCALL_NUMBER_SYMBOL_FIND:
+        {
+            ret=__hdefaults_usercall_symbol_find(number,va);
         }
         break;
         default:
@@ -258,6 +299,11 @@ HDEFAULTS_USERCALL_DEFINE1(gunlock,HDEFAULTS_USERCALL_NUMBER_GUNLOCK,int,void *,
     return 0;
 }
 
+HDEFAULTS_USERCALL_DEFINE1(symbol_find,HDEFAULTS_USERCALL_NUMBER_SYMBOL_FIND,void *,const char *,symbol_name)
+{
+    return hdefaults_symbol_find(symbol_name);
+}
+
 static const hdefaults_api_table_t default_api_table=
 {
     do_hdefaults_tick_get,
@@ -266,6 +312,7 @@ static const hdefaults_api_table_t default_api_table=
     do_hdefaults_mutex_lock,
     do_hdefaults_mutex_unlock,
     do_hdefaults_usercall,
+    do_hdefaults_symbol_find
 };
 static const hdefaults_api_table_t * api_table=&default_api_table;
 const hdefaults_api_table_t * hdefaults_get_api_table(void)
@@ -342,6 +389,19 @@ void  hdefaults_mutex_unlock(void *usr)
     else
     {
         do_hdefaults_mutex_unlock(usr);
+    }
+}
+
+void * hdefaults_symbol_find(const char * symbol_name)
+{
+    const hdefaults_api_table_t *api_table=hdefaults_get_api_table();
+    if(api_table!=NULL && api_table->symbol_find!=NULL)
+    {
+        return api_table->symbol_find(symbol_name);
+    }
+    else
+    {
+        return do_hdefaults_symbol_find(symbol_name);
     }
 }
 

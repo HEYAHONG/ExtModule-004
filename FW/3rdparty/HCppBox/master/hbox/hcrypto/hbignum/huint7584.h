@@ -215,6 +215,23 @@ size_t huint7584_clz(const huint7584_t *dst);
  */
 size_t huint7584_ctz(const huint7584_t *dst);
 
+
+/** \brief 判断大数是否为0
+ *
+ * \param src const huint7584_t* 源大数
+ * \return bool 是否为0（源大数为空时返回false）
+ *
+ */
+bool huint7584_t_is_zero(const huint7584_t * src);
+
+/** \brief 判断大数是否为1
+ *
+ * \param src const huint7584_t* 源大数
+ * \return bool 是否为1（源大数为空时返回false）
+ *
+ */
+bool huint7584_t_is_one(const huint7584_t * src);
+
 /** \brief 加
  *
  * \param dst huint7584_t* 目标大数
@@ -234,6 +251,13 @@ void huint7584_add(huint7584_t *dst,const huint7584_t *src1,const huint7584_t *s
  */
 void huint7584_sub(huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
 
+
+typedef struct huint7584_state huint7584_state_t;
+struct huint7584_state
+{
+    huint7584_t state[8];        /**< 固定采用8个寄存器 */
+};
+
 /** \brief 乘
  *
  * \param state huint7584_t* 状态值，用于中间状态存储,不可为空
@@ -243,6 +267,25 @@ void huint7584_sub(huint7584_t *dst,const huint7584_t *src1,const huint7584_t *s
  *
  */
 void huint7584_mul(huint7584_t *state,huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
+
+/** \brief 乘(采用栈作为临时变量存储)
+ *
+ * \param dst huint7584_t* 目标大数,dst=src1*src2
+ * \param src1 const huint7584_t* 源大数1
+ * \param src2 const huint7584_t* 源大数2
+ *
+ */
+void huint7584_mul_with_stack(huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
+
+/** \brief 乘(外部分配的状态寄存器)
+ *
+ * \param state huint7584_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint7584_t* 目标大数,dst=src1*src2
+ * \param src1 const huint7584_t* 源大数1
+ * \param src2 const huint7584_t* 源大数2
+ *
+ */
+void huint7584_mul_with_external_state(huint7584_state_t *state,huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
 
 
 /** \brief 除
@@ -266,6 +309,17 @@ void huint7584_div(huint7584_t *state,huint7584_t *state1,huint7584_t *state2,hu
  *
  */
 void huint7584_div_with_stack(huint7584_t *mod,huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
+
+/** \brief 除(外部分配的状态寄存器)
+ *
+ * \param state huint7584_state_t * 状态值，用于中间状态存储,不可为空
+ * \param mod huint7584_t* 状态值，存储余数。mod=src1%src2
+ * \param dst huint7584_t* 目标大数,dst=src1/src2
+ * \param src1 const huint7584_t* 源大数1
+ * \param src2 const huint7584_t* 源大数2
+ *
+ */
+void huint7584_div_with_external_state(huint7584_state_t * state,huint7584_t *mod,huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
 
 
 /** \brief 幂函数
@@ -291,6 +345,53 @@ void huint7584_power(huint7584_t *state,huint7584_t *state1,huint7584_t *state2,
 void huint7584_power_with_stack(huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
 
 
+/** \brief 幂函数(外部分配的状态寄存器)
+ *
+ * \param state huint7584_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint7584_t* 目标大数,dst=src1的src2次方
+ * \param src1 const huint7584_t* 源大数1
+ * \param src2 const huint7584_t* 源大数2
+ *
+ */
+void huint7584_power_with_external_state(huint7584_state_t * state,huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
+
+/** \brief 求根
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param state huint7584_t* 状态值，用于中间状态存储,不可为空
+ * \param state1 huint7584_t* 状态值，用于中间状态存储,不可为空
+ * \param state2 huint7584_t* 状态值，用于中间状态存储,不可为空
+ * \param state3 huint7584_t* 状态值，用于中间状态存储,不可为空
+ * \param state4 huint7584_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint7584_t* 目标大数
+ * \param src const huint7584_t* 源大数
+ * \param index size_t 指数，不可为0
+ *
+ */
+void huint7584_root(huint7584_t *state,huint7584_t *state1,huint7584_t *state2,huint7584_t *state3,huint7584_t *state4,huint7584_t *dst,const huint7584_t *src,size_t index);
+
+
+/** \brief 求根(采用栈作为临时变量存储)
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param dst huint7584_t* 目标大数
+ * \param src const huint7584_t* 源大数
+ * \param index size_t 指数,不可为0
+ *
+ */
+void huint7584_root_with_stack(huint7584_t *dst,const huint7584_t *src,size_t index);
+
+/** \brief 求根(外部分配的状态寄存器)
+ *
+ * 注意：此函数求的是根的整数部分，小数部分将舍弃
+ * \param state huint7584_state_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint7584_t* 目标大数
+ * \param src const huint7584_t* 源大数
+ * \param index size_t 指数
+ *
+ */
+void huint7584_root_with_external_state(huint7584_state_t * state,huint7584_t *dst,const huint7584_t *src,size_t index);
+
 /** \brief 幂取模函数（常用于RSA等加密算法）
  *
  * \param state huint7584_t* 状态值，用于中间状态存储,不可为空
@@ -314,6 +415,49 @@ void huint7584_power_mod(huint7584_t *state,huint7584_t *state1,huint7584_t *sta
  *
  */
 void huint7584_power_mod_with_stack(huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2,const huint7584_t *src3);
+
+/** \brief 幂取模函数（常用于RSA等加密算法,外部分配的状态寄存器）
+ *
+ * \param state huint7584_state_t * 状态值，用于中间状态存储,不可为空
+ * \param dst huint7584_t* 目标大数,dst=src1的src2次方对src3取模
+ * \param src1 const huint7584_t* 源大数1
+ * \param src2 const huint7584_t* 源大数2
+ * \param src3 const huint7584_t* 源大数3
+ *
+ */
+void huint7584_power_mod_with_external_state(huint7584_state_t * state,huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2,const huint7584_t *src3);
+
+
+/** \brief 辗转向除法
+ *
+ * \param state huint7584_state_t* 状态值，用于中间状态存储,不可为空
+ * \param dst huint7584_t* 目标大数
+ * \param src1 const huint7584_t* 源大数1
+ * \param src2 const huint7584_t* 源大数2
+ *
+ */
+void huint7584_gcd(huint7584_state_t * state,huint7584_t *dst,const huint7584_t *src1,const huint7584_t *src2);
+
+/** \brief 获取十进制数的位数（从最高非0位开始计算，通常用于打印）
+ *
+ * 注意：此函数需要注意溢出问题
+ * \param state huint7584_state_t* 状态值，用于中间状态存储,不可为空
+ * \param src const huint7584_t*  源大数
+ * \return size_t 获取十进制数的位数(从最高非0位开始计算，通常用于打印）
+ *
+ */
+size_t huint7584_dec_number_count(huint7584_state_t * state,const huint7584_t *src);
+
+/** \brief 获取十进制数的位上的值
+ *
+ * 注意：此函数需要注意溢出问题
+ * \param state huint7584_state_t* 状态值，用于中间状态存储,不可为空
+ * \param src const huint7584_t* 源大数
+ * \param index size_t 引索
+ * \return size_t 十进制位上的值(0~9)
+ *
+ */
+size_t huint7584_dec_number(huint7584_state_t * state,const huint7584_t *src,size_t index);
 
 #ifdef __cplusplus
 }
