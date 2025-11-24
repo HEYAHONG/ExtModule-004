@@ -102,6 +102,26 @@ struct hruntime_function
  */
 void hruntime_function_array_invoke(const hruntime_function_t *array_base,size_t array_size);
 
+/*
+ * 定义导出的HRuntimeInit数据项
+ */
+#ifndef HRUNTIME_INIT_DATA
+#define HRUNTIME_INIT_DATA(name,priority,entry,usr)
+#endif // HRUNTIME_INIT_DATA
+
+/*
+ * 定义导出的HRuntimeInit结构体
+ */
+#ifndef HRUNTIME_INIT_STRUCT
+#define HRUNTIME_INIT_STRUCT(name,priority,entry,usr) \
+    static const hruntime_function_t hruntime_init_##name = \
+    {\
+        (priority),\
+        (entry) ,\
+        (usr) \
+    }
+#endif // HRUNTIME_INIT_STRUCT
+
 #if defined(HCOMPILER_ARMCC) || defined(HCOMPILER_ARMCLANG)
 /*
  * armcc/armclang,使用名称为HRuntimeInit的section
@@ -111,14 +131,10 @@ void hruntime_function_array_invoke(const hruntime_function_t *array_base,size_t
  * 导出初始化
  */
 #define HRUNTIME_INIT_EXPORT(name,priority,entry,usr) \
+    HRUNTIME_INIT_DATA(name,priority,entry,usr) \
     __USED\
     __SECTION("HRuntimeInit")\
-    static const hruntime_function_t hruntime_init_##name = \
-    {\
-        (priority),\
-        (entry) ,\
-        (usr) \
-    }
+    HRUNTIME_INIT_STRUCT(name,priority,entry,usr)
 
 /*
  * 调用导出的初始化函数
@@ -142,14 +158,10 @@ hruntime_function_array_invoke((hruntime_function_t *)&HRuntimeInit$$Base,(((uin
 * 导出初始化
 */
 #define HRUNTIME_INIT_EXPORT(name,priority,entry,usr) \
+    HRUNTIME_INIT_DATA(name,priority,entry,usr) \
     __USED\
     __SECTION(".HRuntimeInit")\
-    static const hruntime_function_t hruntime_init_##name = \
-    {\
-        (priority),\
-        (entry) ,\
-        (usr) \
-    }
+    HRUNTIME_INIT_STRUCT(name,priority,entry,usr)
 
 /*
  * 调用导出的初始化函数
@@ -182,6 +194,55 @@ hruntime_function_array_invoke(__hruntime_init_start,(((uintptr_t)__hruntime_ini
 #endif
 
 
+/** \brief 运行循环函数(内部使用, 用户不应使用)
+ * 一般用于使用段进行循环时，供内部使用
+ *
+ * \param array_base const hruntime_function_t* 运行时函数数组
+ * \param array_size size_t 运行时函数数组大小
+ *
+ */
+void hruntime_function_loop_cache_invoke(const hruntime_function_t *array_base,size_t array_size);
+
+
+/** \brief 循环函数缓存表添加
+ *
+ * 注意:需要启用缓存表,由于内部未加锁，推荐在运行时函数运行时调用
+ * \param hruntime_function const hruntime_function_t* 运行时函数
+ * \return bool 是否成功
+ *
+ */
+bool hruntime_function_loop_cache_table_add(const hruntime_function_t * hruntime_function);
+
+/** \brief 循环函数缓存表删除
+ *
+ * 注意:需要启用缓存表,由于内部未加锁，推荐在运行时函数运行时调用
+ * \param hruntime_function const hruntime_function_t* 运行时函数
+ * \return bool 是否成功
+ *
+ */
+bool hruntime_function_loop_cache_table_remove(const hruntime_function_t * hruntime_function);
+
+
+/*
+ * 定义导出的HRuntimeLoop数据项
+ */
+#ifndef HRUNTIME_LOOP_DATA
+#define HRUNTIME_LOOP_DATA(name,priority,entry,usr)
+#endif
+
+/*
+ * 定义导出的HRuntimeLoop结构体
+ */
+#ifndef HRUNTIME_LOOP_STRUCT
+#define HRUNTIME_LOOP_STRUCT(name,priority,entry,usr) \
+    static const hruntime_function_t hruntime_loop_##name = \
+    {\
+        (priority),\
+        (entry) ,\
+        (usr) \
+    }
+#endif
+
 #if defined(HCOMPILER_ARMCC) || defined(HCOMPILER_ARMCLANG)
 /*
  * armcc/armclang,使用名称为HRuntimeLoop的section
@@ -191,14 +252,10 @@ hruntime_function_array_invoke(__hruntime_init_start,(((uintptr_t)__hruntime_ini
  * 导出循环
  */
 #define HRUNTIME_LOOP_EXPORT(name,priority,entry,usr) \
+    HRUNTIME_LOOP_DATA(name,priority,entry,usr)\
     __USED\
     __SECTION("HRuntimeLoop")\
-    static const hruntime_function_t hruntime_loop_##name = \
-    {\
-        (priority),\
-        (entry) ,\
-        (usr) \
-    }
+    HRUNTIME_LOOP_STRUCT(name,priority,entry,usr)
 
 /*
  * 调用导出的循环函数
@@ -207,6 +264,11 @@ extern const  int HRuntimeLoop$$Base;
 extern const  int HRuntimeLoop$$Limit;
 #define HRUNTIME_LOOP_INVOKE() \
 hruntime_function_array_invoke((hruntime_function_t *)&HRuntimeLoop$$Base,(((uintptr_t)(hruntime_function_t *)&HRuntimeLoop$$Limit)-((uintptr_t)(hruntime_function_t *)&HRuntimeLoop$$Base))/sizeof(hruntime_function_t))
+
+
+#define HRUNTIME_LOOP_CACHE_INVOKE() \
+hruntime_function_loop_cache_invoke((hruntime_function_t *)&HRuntimeLoop$$Base,(((uintptr_t)(hruntime_function_t *)&HRuntimeLoop$$Limit)-((uintptr_t)(hruntime_function_t *)&HRuntimeLoop$$Base))/sizeof(hruntime_function_t))
+
 
 #elif defined(HCOMPILER_GCC) || defined(HCOMPILER_CLANG)
 /*
@@ -222,14 +284,10 @@ hruntime_function_array_invoke((hruntime_function_t *)&HRuntimeLoop$$Base,(((uin
 * 导出循环
 */
 #define HRUNTIME_LOOP_EXPORT(name,priority,entry,usr) \
+    HRUNTIME_LOOP_DATA(name,priority,entry,usr)\
     __USED\
     __SECTION(".HRuntimeLoop")\
-    static const hruntime_function_t hruntime_loop_##name = \
-    {\
-        (priority),\
-        (entry) ,\
-        (usr) \
-    }
+    HRUNTIME_LOOP_STRUCT(name,priority,entry,usr)
 
 /*
  * 调用导出的循环函数
@@ -239,7 +297,8 @@ extern const  hruntime_function_t __hruntime_loop_end[];
 #define HRUNTIME_LOOP_INVOKE() \
 hruntime_function_array_invoke(__hruntime_loop_start,(((uintptr_t)__hruntime_loop_end)-((uintptr_t)__hruntime_loop_start))/sizeof(hruntime_function_t))
 
-
+#define HRUNTIME_LOOP_CACHE_INVOKE() \
+hruntime_function_loop_cache_invoke(__hruntime_loop_start,(((uintptr_t)__hruntime_loop_end)-((uintptr_t)__hruntime_loop_start))/sizeof(hruntime_function_t))
 
 
 #else
@@ -258,6 +317,10 @@ hruntime_function_array_invoke(__hruntime_loop_start,(((uintptr_t)__hruntime_loo
  */
 #define HRUNTIME_LOOP_INVOKE()
 
+/*
+ * 调用导出的循环函数(带缓存)
+ */
+#define HRUNTIME_LOOP_CACHE_INVOKE()
 
 #endif
 

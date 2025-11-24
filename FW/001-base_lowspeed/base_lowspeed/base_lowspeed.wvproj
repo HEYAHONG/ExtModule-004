@@ -9,6 +9,7 @@
 			"rtos": "NoneOS",
 			"mcu": "CH32V208WBU6",
 			"description": "Website: http://www.wch.cn/products/CH32V208.html?\\nROM(byte): 160K, SRAM(byte): 32K, CHIP PINS: 68, GPIO PORTS: 54.\\nWCH CH32V2 series of mainstream MCUs covers the needs of a large variety of applications in the industrial,medical and consumer markets. High performance with first-class peripherals and low-power,low-voltage operation is paired with a high level of integration at accessible prices with a simple architecture and easy-to-use tools.",
+			"artifactType": "executable",
 			"link": "WCH-Link",
 			"peripheral_version": "2.2",
 			"calibrateSupport": false,
@@ -81,7 +82,9 @@
 					"${project}/Lwip/netif/zepif.c",
 					"${project}/Lwip/apps/http/makefsdata",
 					"${project}/Lwip/apps/http/fs",
-					"${project}/Lwip/apps/http/fsdata.c"
+					"${project}/Lwip/apps/http/fsdata.c",
+					"${project}/HBox/cmake",
+					"${project}/HBox/hsoftplc"
 				],
 				"optimization": {
 					"level": "size",
@@ -347,6 +350,7 @@
 					"show_totals": false,
 					"other_flags": ""
 				},
+				"configVariables": [],
 				"riscvTargetProcessor": {
 					"architecture": "rv32i",
 					"multiply_extension": true,
@@ -366,8 +370,7 @@
 					"other_target_flags": ""
 				},
 				"component_toolchain": "${WCH:Toolchain:GCC8}",
-				"name": "obj",
-				"configVariables": []
+				"name": "obj"
 			}
 		]
 	},
@@ -396,21 +399,17 @@
 			"telnetport": 4444,
 			"tclport": 6666,
 			"configOptions": [
-				"-f \"${WCH:OpenOCD:default}/bin/wch-riscv.cfg\" -c page_erase -c init -c \"wch_riscv unfreeze\""
+				"-f \"${WCH:OpenOCD:default}/bin/wch-riscv.cfg\""
 			],
 			"host": "localhost",
 			"port": 3333,
 			"skipDownloadBeforeDebug": false,
-			"enablePageEraser": true,
-			"enableNoZeroWaitingAreaFlash": true
+			"enablePageEraser": false,
+			"enableNoZeroWaitingAreaFlash": false
 		},
 		"gdbCfg": {
 			"executable": "${WCH:Toolchain:GCC8}",
-			"options": [
-				"set",
-				"remotetimeout",
-				"5000"
-			],
+			"options": [],
 			"commands": [
 				"set mem inaccessible-by-default off",
 				"set architecture riscv:rv32",
