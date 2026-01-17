@@ -15,6 +15,8 @@ extern "C"
 #endif // __cplusplus
 
 #include "hsoftplc/hsoftplc.h"
+#include "hsoftplc/hsoftplc_dll.h"
+#include "hsoftplc/hsoftplc_database.h"
 
 #ifdef __cplusplus
 }

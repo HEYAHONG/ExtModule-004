@@ -84,7 +84,8 @@
 					"${project}/Lwip/apps/http/fs",
 					"${project}/Lwip/apps/http/fsdata.c",
 					"${project}/HBox/cmake",
-					"${project}/HBox/hsoftplc"
+					"${project}/HBox/hsoftplc",
+					"${project}/HBox/h3rdparty/port"
 				],
 				"optimization": {
 					"level": "size",

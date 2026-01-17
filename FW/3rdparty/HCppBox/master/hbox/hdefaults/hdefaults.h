@@ -27,6 +27,8 @@
 //定义硬件架构(支持部分常用架构)
 #include "hdefaults_arch.h"
 
+//定义平台(支持部分常用平台)
+#include "hdefaults_platform.h"
 
 //定义操作系统
 #include "hdefaults_os.h"
@@ -53,5 +55,17 @@
 
 //libdl移植
 #include "libdl/hdefaults_libdl_port.h"
+
+/** \brief hdefaults组件初始化
+ *  注意：默认由hruntime调用
+ *
+ */
+void hdefaults_init(void);
+
+/** \brief hdefaults组件循环
+ *  注意：默认由hruntime调用
+ *
+ */
+void  hdefaults_loop(void);
 
 #endif // HDEFAULTS_H_INCLUDED

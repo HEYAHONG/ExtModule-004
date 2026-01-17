@@ -12,6 +12,19 @@
 #include "stdarg.h"
 #include "hdefaults.h"
 
+/** \brief 初始化第三方库
+ *  注意：默认由hruntime组件调用
+ *
+ */
+void h3rdparty_init(void);
+
+/** \brief 循环第三方库
+ *  注意：默认由hruntime组件调用
+ *
+ */
+void h3rdparty_loop(void);
+
+
 /*
  *  此模块引入第三方库
  */
@@ -29,7 +42,7 @@
 #include "h3rdparty/port/libfdt/h3rdparty_port_libfdt.h"
 #include "h3rdparty/port/FreeRTOS/h3rdparty_port_FreeRTOS.h"
 #include "h3rdparty/port/mini-rv32ima/h3rdparty_port_mini_rv32ima.h"
-
+#include "h3rdparty/port/uriparser/h3rdparty_port_uriparser.h"
 
 
 #endif // __H3RDPARTY_H__

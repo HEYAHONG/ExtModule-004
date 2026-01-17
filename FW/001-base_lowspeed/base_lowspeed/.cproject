@@ -276,7 +276,7 @@
             </toolChain>
           </folderInfo>
           <sourceEntries>
-            <entry excluding="Startup/startup_ch32v20x_D6.S|Startup/startup_ch32v20x_D8.S|HBox_3rdparty/3rdparty|HBox_cpp|HBox_3rdparty|HBox/hcompiler|HBox/hcrypto|HBox/hdefaults|HBox/hdriverframework|HBox/hevent|HBox/hgui|HBox/hlocale|HBox/hmemory|HBox/hnet|HBox/hruntime|HBox/hshell|HBox/hsimulator|HBox/huuid|HBox/pbinc|HBox/h3rdparty/3rdparty|Lwip/netif/ppp|Lwip/netif/bridgeif_fdb.c|Lwip/netif/bridgeif.c|Lwip/netif/lowpan6_ble.c|Lwip/netif/lowpan6_common.c|Lwip/netif/lowpan6.c|Lwip/netif/slipif.c|Lwip/netif/zepif.c|Lwip/apps/http/makefsdata|Lwip/apps/http/fs|Lwip/apps/http/fsdata.c|HBox/cmake|HBox/hsoftplc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+            <entry excluding="Startup/startup_ch32v20x_D6.S|Startup/startup_ch32v20x_D8.S|HBox_3rdparty/3rdparty|HBox_cpp|HBox_3rdparty|HBox/hcompiler|HBox/hcrypto|HBox/hdefaults|HBox/hdriverframework|HBox/hevent|HBox/hgui|HBox/hlocale|HBox/hmemory|HBox/hnet|HBox/hruntime|HBox/hshell|HBox/hsimulator|HBox/huuid|HBox/pbinc|HBox/h3rdparty/3rdparty|Lwip/netif/ppp|Lwip/netif/bridgeif_fdb.c|Lwip/netif/bridgeif.c|Lwip/netif/lowpan6_ble.c|Lwip/netif/lowpan6_common.c|Lwip/netif/lowpan6.c|Lwip/netif/slipif.c|Lwip/netif/zepif.c|Lwip/apps/http/makefsdata|Lwip/apps/http/fs|Lwip/apps/http/fsdata.c|HBox/cmake|HBox/hsoftplc|HBox/h3rdparty/port" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
           </sourceEntries>
         </configuration>
       </storageModule>

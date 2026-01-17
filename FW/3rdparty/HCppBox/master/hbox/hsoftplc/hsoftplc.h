@@ -10,6 +10,7 @@
 #define __HSOFTPLC_H__
 #include "stdlib.h"
 #include "stdbool.h"
+#include "hcompiler.h"
 #ifdef __cplusplus
 extern "C"
 {
@@ -109,7 +110,7 @@ struct hsoftplc_variable_symbol
     hsoftplc_variable_name_t buffer;                /**< 存储数据的缓冲 */
     char            variable_location;              /**< 位置：通常为I（输入）、Q（输出）、M（内存） */
     char            variable_size;                  /**< 大小：通常为X（1位）、B（8位）、W（16位）、D（32位）、L（64位） */
-    const char *    variable_address[3];            /**< 地址：通常为数字字符串 */
+    const char *    variable_address[3];            /**< 地址：通常为数字字符串,通常为无符号整数。一般情况下， variable_address[1]若不为空，其范围应当在[0,7],variable_address[2]若不为空，其范围应当在[1,16]*/
 };
 
 
@@ -121,6 +122,8 @@ struct hsoftplc_variable_symbol
  *
  */
 hsoftplc_variable_symbol_t * hsoftplc_parse_variable_symbol(hsoftplc_variable_symbol_t * variable_symbol,const char *variable_name_or_iec_addr);
+
+
 
 #ifdef __cplusplus
 }
