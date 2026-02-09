@@ -134,13 +134,13 @@ public:
 
 hlock &hcpprt_global_lock();
 
-#ifndef HCPPRT_NO_ATOMIC
+
 /*
 简易自旋锁(不区分加锁顺序),利用原子操作实现,注意:不支持递归,不能被HBox中的应用直接使用
 */
 class hspinlock:public hlock
 {
-    std::atomic_flag m_flag=ATOMIC_FLAG_INIT;
+    hatomic_flag_t m_flag = HATOMIC_FLAG_INIT;
 public:
     hspinlock()
     {
@@ -153,14 +153,14 @@ public:
     {
     }
 
-    //默认为空函数,在实时操作系统中可尝试进行上下文切换(当然那样也不能称之为一般的自旋锁了)
+    //默认为空函数,在实时操作系统中可尝试进行上下文切换(当然那样也不能称之为自旋锁了)
     virtual void spin()
     {
     }
 
     virtual void lock() override
     {
-        while(m_flag.test_and_set())
+        while(hatomic_flag_test_and_set(&m_flag))
         {
             spin();
         }
@@ -168,12 +168,12 @@ public:
 
     virtual void unlock() override
     {
-        m_flag.clear();
+        hatomic_flag_clear(&m_flag);
     }
 
     virtual bool try_lock() override
     {
-        return !m_flag.test_and_set();
+        return !hatomic_flag_test_and_set(&m_flag);
     }
 
 };
@@ -184,11 +184,12 @@ public:
 */
 class hreentrantspinlock:public hlock
 {
-    std::atomic_flag m_flag = ATOMIC_FLAG_INIT;
-    std::atomic_int cnt;
+    hatomic_flag_t m_flag = HATOMIC_FLAG_INIT;
+    hatomic_int_t  cnt;
 public:
-    hreentrantspinlock():cnt(0)
+    hreentrantspinlock()
     {
+        hatomic_int_init(&cnt,0);
     }
     hreentrantspinlock(hreentrantspinlock & oths) = delete;
     hreentrantspinlock(hreentrantspinlock && oths) = delete;
@@ -212,16 +213,16 @@ public:
     {
         if(is_currnet_ownner())
         {
-            cnt++;
+            hatomic_int_fetch_add(&cnt,1);
         }
         else
         {
-            while(m_flag.test_and_set())
+            while(hatomic_flag_test_and_set(&m_flag))
             {
                 spin();
             }
             set_currnet_ownner();
-            cnt++;
+            hatomic_int_fetch_add(&cnt,1);
         }
 
     }
@@ -230,11 +231,12 @@ public:
     {
         if(is_currnet_ownner())
         {
-            cnt--;
-            if(cnt == 0)
+            hatomic_int_fetch_sub(&cnt,1);
+            int value=0;
+            if(hatomic_int_compare_exchange_strong(&cnt,&value,value))
             {
                 clear_currnet_ownner();
-                m_flag.clear();
+                hatomic_flag_clear(&m_flag);
             }
         }
     }
@@ -243,21 +245,20 @@ public:
     {
         if(is_currnet_ownner())
         {
-            cnt++;
+            hatomic_int_fetch_add(&cnt,1);
             return true;
         }
-        bool ret=!m_flag.test_and_set();
+        bool ret=!hatomic_flag_test_and_set(&m_flag);
         if(ret)
         {
             set_currnet_ownner();
-            cnt++;
+            hatomic_int_fetch_add(&cnt,1);
         }
         return ret;
     }
 
 };
 
-#endif // HCPPRT_NO_ATOMIC
 
 /*
 提供类似std::locak_guard的功能

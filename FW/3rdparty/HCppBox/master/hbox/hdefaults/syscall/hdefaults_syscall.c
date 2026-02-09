@@ -11,8 +11,14 @@
 /*
  * hsyscall
  */
+#if !defined(HSYSCALL_NO_IMPLEMENTATION)
+#if !defined(HSYSCALL_NO_TIME)
 #include "hsyscall/time/hsyscall_time.c"
+#endif
+#if !defined(HSYSCALL_NO_RANDOM)
 #include "hsyscall/random/hsyscall_random.c"
+#endif
+#endif
 
 /*
  * 包装
@@ -29,6 +35,11 @@
 #include "wrapper/hwrite.c"
 #include "wrapper/hlseek.c"
 #include "wrapper/hopen.c"
+#include "wrapper/hopenat.c"
+#include "wrapper/hioctl.c"
+#include "wrapper/hclock_getres.c"
+#include "wrapper/hclock_gettime.c"
+#include "wrapper/hclock_settime.c"
 
 
 #ifndef HDEFAULTS_SYSCALL_NO_IMPLEMENTATION
@@ -45,6 +56,11 @@
 #include "implementation/hwrite.c"
 #include "implementation/hlseek.c"
 #include "implementation/hopen.c"
+#include "implementation/hopenat.c"
+#include "implementation/hioctl.c"
+#include "implementation/hclock_getres.c"
+#include "implementation/hclock_gettime.c"
+#include "implementation/hclock_settime.c"
 
 #endif // HDEFAULTS_SYSCALL_NO_IMPLEMENTATION
 
@@ -96,6 +112,26 @@
 #ifdef HDEFAULTS_SYSCALL_NO_HOPEN
 #undef HDEFAULTS_SYSCALL_HOPEN
 #endif // HDEFAULTS_SYSCALL_NO_HOPEN
+
+#ifdef HDEFAULTS_SYSCALL_NO_HOPENAT
+#undef HDEFAULTS_SYSCALL_HOPENAT
+#endif // HDEFAULTS_SYSCALL_NO_HOPENAT
+
+#ifdef HDEFAULTS_SYSCALL_NO_HIOCTL
+#undef HDEFAULTS_SYSCALL_HIOCTL
+#endif // HDEFAULTS_SYSCALL_NO_HIOCTL
+
+#ifdef HDEFAULTS_SYSCALL_NO_HCLOCK_GETRES
+#undef HDEFAULTS_SYSCALL_HCLOCK_GETRES
+#endif // HDEFAULTS_SYSCALL_NO_HCLOCK_GETRES
+
+#ifdef HDEFAULTS_SYSCALL_NO_HCLOCK_GETTIME
+#undef HDEFAULTS_SYSCALL_HCLOCK_GETTIME
+#endif // HDEFAULTS_SYSCALL_NO_HCLOCK_GETTIME
+
+#ifdef HDEFAULTS_SYSCALL_NO_HCLOCK_SETTIME
+#undef HDEFAULTS_SYSCALL_HCLOCK_SETTIME
+#endif // HDEFAULTS_SYSCALL_NO_HCLOCK_SETTIME
 
 hdefaults_syscall_function_t hdefaults_syscall_function_find(uintptr_t number)
 {
@@ -187,6 +223,41 @@ hdefaults_syscall_function_t hdefaults_syscall_function_find(uintptr_t number)
     }
     break;
 #endif
+#ifdef HDEFAULTS_SYSCALL_HOPENAT
+    case HDEFAULTS_SYSCALL_HOPENAT:
+    {
+        ret=__hdefaults_usercall_hopenat;
+    }
+    break;
+#endif
+#ifdef HDEFAULTS_SYSCALL_HIOCTL
+    case HDEFAULTS_SYSCALL_HIOCTL:
+    {
+        ret=__hdefaults_usercall_hioctl;
+    }
+    break;
+#endif
+#ifdef HDEFAULTS_SYSCALL_HCLOCK_GETRES
+    case HDEFAULTS_SYSCALL_HCLOCK_GETRES:
+    {
+        ret=__hdefaults_usercall_hclock_getres;
+    }
+    break;
+#endif
+#ifdef HDEFAULTS_SYSCALL_HCLOCK_GETTIME
+    case HDEFAULTS_SYSCALL_HCLOCK_GETTIME:
+    {
+        ret=__hdefaults_usercall_hclock_gettime;
+    }
+    break;
+#endif
+#ifdef HDEFAULTS_SYSCALL_HCLOCK_SETTIME
+    case HDEFAULTS_SYSCALL_HCLOCK_SETTIME:
+    {
+        ret=__hdefaults_usercall_hclock_settime;
+    }
+    break;
+#endif
     default:
     {
     }
@@ -198,6 +269,17 @@ hdefaults_syscall_function_t hdefaults_syscall_function_find(uintptr_t number)
 
 void hdefaults_syscall_init(void)
 {
+
+#if  defined(HDEFAULTS_OS_EMSCRIPTEN)
+    {
+        hsettimeofday_timeval_t tv= {0};
+        struct timeval old_tv={0};
+        gettimeofday(&old_tv,NULL);
+        tv.tv_sec=old_tv.tv_sec;
+        tv.tv_usec=old_tv.tv_usec;
+        hsettimeofday(&tv,NULL);
+    }
+#endif
 
 #if !defined(HDEFAULTS_SYSCALL_NO_IMPLEMENTATION) && !defined(HDEFAULTS_SYSCALL_NO_HGETRANDOM) && !defined(HGETRANDOM)
     {
@@ -227,6 +309,16 @@ void hdefaults_syscall_loop(void)
         hgettimeofday_timeval_t tv;
         hgettimeofday_timezone_t tz;
         hgettimeofday(&tv,&tz);
+    }
+#endif
+
+#if !defined(HDEFAULTS_SYSCALL_NO_IMPLEMENTATION) && !defined(HDEFAULTS_SYSCALL_NO_HCLOCK_GETTIME) && !defined(HCLOCK_GETTIME)
+    /*
+     * 更新内部单调时钟时间
+     */
+    {
+        htimespec_t tp={0};
+        hclock_gettime(HCLOCK_MONOTONIC,&tp);
     }
 #endif
 
