@@ -6,19 +6,14 @@
  * Copyright: HYH (hyhsystem.cn)
  * License:   MIT
  **************************************************************/
+
+#define H3RDPARTY_LIBFDT_IMPLEMENTATION  1
+
 #include "hcompiler.h"
 #include "hdefaults.h"
 #include "h3rdparty.h"
 
-
-/*
- * 修复armcc下的警告
- */
-#ifdef __ARMCC_VERSION
-#ifndef __clang__
-#pragma diag_suppress 1293
-#endif
-#endif // __ARMCC_VERSION
+#include "h3rdparty/patch/armcc_diag_suppress.c"
 
 #include "3rdparty/libfdt/libfdt_env.h"
 

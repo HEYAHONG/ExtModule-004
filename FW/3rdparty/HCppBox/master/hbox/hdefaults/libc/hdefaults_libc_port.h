@@ -31,6 +31,10 @@ extern "C"
 #include "wrapper/stdio/hferror.h"
 #include "wrapper/stdio/hfread.h"
 #include "wrapper/stdio/hfwrite.h"
+#include "wrapper/stdio/hfclose.h"
+#include "wrapper/stdio/hfopen.h"
+#include "wrapper/stdio/hfseek.h"
+
 
 /*
  * stdlib
@@ -90,6 +94,7 @@ extern "C"
 #include "hlibc/stdatomic/hlibc_atomic_flag.h"
 #include "hlibc/time/hlibc_time.h"
 #include "hlibc/threads/hlibc_threads.h"
+#include "hlibc/stdio/hlibc_stdio.h"
 
 /*
  * 非标扩展

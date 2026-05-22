@@ -88,7 +88,7 @@ int  hfiledescriptor_filev1_close(hfiledescriptor_fd_t fd)
     return ret;
 }
 
-int  hfiledescriptor_filev1_lseek(hfiledescriptor_fd_t fd, hfiledescriptor_ssize_t offset, int whence)
+hfiledescriptor_off_t  hfiledescriptor_filev1_lseek(hfiledescriptor_fd_t fd, hfiledescriptor_off_t offset, int whence)
 {
     hfiledescriptor_filev1_t *filev1=hfiledescriptor_filev1_get(fd);
     if(filev1==NULL)
@@ -114,6 +114,21 @@ int  hfiledescriptor_filev1_ioctl(hfiledescriptor_fd_t fd, unsigned long op, va_
     if(filev1->filev1_ioctl!=NULL)
     {
         ret=filev1->filev1_ioctl(fd,op,va);
+    }
+    return ret;
+}
+
+int  hfiledescriptor_filev1_fcntl(hfiledescriptor_fd_t fd, int op,va_list va)
+{
+    hfiledescriptor_filev1_t *filev1=hfiledescriptor_filev1_get(fd);
+    if(filev1==NULL)
+    {
+        return -1;
+    }
+    int ret=-1;
+    if(filev1->filev1_fcntl!=NULL)
+    {
+        ret=filev1->filev1_fcntl(fd,op,va);
     }
     return ret;
 }

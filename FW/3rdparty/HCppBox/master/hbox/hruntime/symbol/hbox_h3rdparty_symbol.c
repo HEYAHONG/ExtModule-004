@@ -132,7 +132,6 @@ static const hruntime_symbol_t hruntime_hbox_h3rdparty_symbol[]=
 //h3rdparty/h3rdparty_libfdt_fdt_empty_tree.c
 //h3rdparty/h3rdparty_libfdt_fdt_overlay.c
 //h3rdparty/h3rdparty_libfdt_fdt_ro.c
-    {hdefaults_str(fdt_node_offset_by_phandle),(uintptr_t)&fdt_node_offset_by_phandle},
 //h3rdparty/h3rdparty_libfdt_fdt_rw.c
 //h3rdparty/h3rdparty_libfdt_fdt_strerror.c
 //h3rdparty/h3rdparty_libfdt_fdt_sw.c
@@ -140,8 +139,12 @@ static const hruntime_symbol_t hruntime_hbox_h3rdparty_symbol[]=
 //h3rdparty/h3rdparty_libfdt_port.c
     {hdefaults_str(hlibfdt_check),(uintptr_t)&hlibfdt_check},
     {hdefaults_str(hlibfdt_traverse_node),(uintptr_t)&hlibfdt_traverse_node},
+    {hdefaults_str(hlibfdt_traverse_subnode),(uintptr_t)&hlibfdt_traverse_subnode},
+    {hdefaults_str(hlibfdt_path_offset),(uintptr_t)&hlibfdt_path_offset},
     {hdefaults_str(hlibfdt_traverse_node_property),(uintptr_t)&hlibfdt_traverse_node_property},
     {hdefaults_str(hlibfdt_get_phandle),(uintptr_t)&hlibfdt_get_phandle},
+    {hdefaults_str(hlibfdt_node_offset_by_phandle),(uintptr_t)&hlibfdt_node_offset_by_phandle},
+    {hdefaults_str(hlibfdt_getprop),(uintptr_t)&hlibfdt_getprop},
 //h3rdparty/h3rdparty_libqrencode_bitstream.c
 //h3rdparty/h3rdparty_libqrencode_mask.c
 //h3rdparty/h3rdparty_libqrencode_mmask.c
@@ -167,7 +170,23 @@ static const hruntime_symbol_t hruntime_hbox_h3rdparty_symbol[]=
     {hdefaults_str(hlz4_compress),(uintptr_t)&hlz4_compress},
     {hdefaults_str(hlz4_compress_hc),(uintptr_t)&hlz4_compress_hc},
     {hdefaults_str(hlz4_decompress),(uintptr_t)&hlz4_decompress},
+    {hdefaults_str(hlz4f_readopen),(uintptr_t)&hlz4f_readopen},
+    {hdefaults_str(hlz4f_read),(uintptr_t)&hlz4f_read},
+    {hdefaults_str(hlz4f_readclose),(uintptr_t)&hlz4f_readclose},
+    {hdefaults_str(hlz4f_preferences_fast),(uintptr_t)&hlz4f_preferences_fast},
+    {hdefaults_str(hlz4f_preferences_best),(uintptr_t)&hlz4f_preferences_best},
+    {hdefaults_str(hlz4f_writeopen),(uintptr_t)&hlz4f_writeopen},
+    {hdefaults_str(hlz4f_write),(uintptr_t)&hlz4f_write},
+    {hdefaults_str(hlz4f_writeclose),(uintptr_t)&hlz4f_writeclose},
 //h3rdparty/h3rdparty_lz4_xxhash.c
+//h3rdparty/h3rdparty_mini-rv32ima_port.c
+    {hdefaults_str(hminirv32ima_core_init),(uintptr_t)&hminirv32ima_core_init},
+    {hdefaults_str(hminirv32ima_machine_default64mb_init),(uintptr_t)&hminirv32ima_machine_default64mb_init},
+    {hdefaults_str(hminirv32ima_machine_default64mb_reset),(uintptr_t)&hminirv32ima_machine_default64mb_reset},
+    {hdefaults_str(hminirv32ima_machine_default64mb_load_image),(uintptr_t)&hminirv32ima_machine_default64mb_load_image},
+    {hdefaults_str(hminirv32ima_machine_default64mb_load_dtb),(uintptr_t)&hminirv32ima_machine_default64mb_load_dtb},
+    {hdefaults_str(hminirv32ima_machine_default64mb_step),(uintptr_t)&hminirv32ima_machine_default64mb_step},
+    {hdefaults_str(hminirv32ima_core_step),(uintptr_t)&hminirv32ima_core_step},
 //h3rdparty/h3rdparty_mqtt_packet.c
 //h3rdparty/h3rdparty_pb_common.c
 //h3rdparty/h3rdparty_pb_decode.c
@@ -261,6 +280,27 @@ static const hruntime_symbol_t hruntime_hbox_h3rdparty_symbol[]=
     {hdefaults_str(hzlib_compress2),(uintptr_t)&hzlib_compress2},
     {hdefaults_str(hzlib_uncompress),(uintptr_t)&hzlib_uncompress},
     {hdefaults_str(hzlib_uncompress2),(uintptr_t)&hzlib_uncompress2},
+    {hdefaults_str(hgzdopen),(uintptr_t)&hgzdopen},
+    {hdefaults_str(hgzbuffer),(uintptr_t)&hgzbuffer},
+    {hdefaults_str(hgzsetparams),(uintptr_t)&hgzsetparams},
+    {hdefaults_str(hgzread),(uintptr_t)&hgzread},
+    {hdefaults_str(hgzfread),(uintptr_t)&hgzfread},
+    {hdefaults_str(hgzwrite),(uintptr_t)&hgzwrite},
+    {hdefaults_str(hgzfwrite),(uintptr_t)&hgzfwrite},
+    {hdefaults_str(hgzputs),(uintptr_t)&hgzputs},
+    {hdefaults_str(hgzgets),(uintptr_t)&hgzgets},
+    {hdefaults_str(hgzputc),(uintptr_t)&hgzputc},
+    {hdefaults_str(hgzgetc),(uintptr_t)&hgzgetc},
+    {hdefaults_str(hgzungetc),(uintptr_t)&hgzungetc},
+    {hdefaults_str(hgzflush),(uintptr_t)&hgzflush},
+    {hdefaults_str(hgzrewind),(uintptr_t)&hgzrewind},
+    {hdefaults_str(hgzeof),(uintptr_t)&hgzeof},
+    {hdefaults_str(hgzdirect),(uintptr_t)&hgzdirect},
+    {hdefaults_str(hgzclose),(uintptr_t)&hgzclose},
+    {hdefaults_str(hgzclose_r),(uintptr_t)&hgzclose_r},
+    {hdefaults_str(hgzclose_w),(uintptr_t)&hgzclose_w},
+    {hdefaults_str(hgzerror),(uintptr_t)&hgzerror},
+    {hdefaults_str(hgzclearerr),(uintptr_t)&hgzclearerr},
 //h3rdparty/h3rdparty_zlib_trees.c
 //h3rdparty/h3rdparty_zlib_uncompr.c
 //h3rdparty/h3rdparty_zlib_zutil.c

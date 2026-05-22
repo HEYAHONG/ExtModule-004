@@ -6,15 +6,17 @@
  * Copyright: HYH (hyhsystem.cn)
  * License:   MIT
  **************************************************************/
+
+#define H3RDPARTY_LIBQRENCODE_IMPLEMENTATION  1
+
 #include "hcompiler.h"
 #include "hdefaults.h"
 #include "h3rdparty.h"
 
-//定义内存分配函数
-#define malloc hmalloc
-#define free   hfree
-#define calloc hcalloc
-#define realloc hrealloc
+#include "h3rdparty/patch/heap.c"
+
+#include "h3rdparty/patch/disable_armcc_gnuc_micro.c"
+
 
 #include "stdarg.h"
 
@@ -63,9 +65,6 @@ static char *qrencode_strdup(const char *s)
  * 修复armcc下的警告
  */
 #ifdef __ARMCC_VERSION
-#ifdef __GNUC__
-#undef __GNUC__
-#endif // __GNUC__
 #ifndef __clang__
 #pragma diag_suppress 186
 #endif
