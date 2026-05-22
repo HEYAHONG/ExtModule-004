@@ -24,7 +24,7 @@ MRS2是一个可用于WCH芯片开发的集成开发环境,其可集开发、调
 
 官网:[http://www.mounriver.com/](http://www.mounriver.com/)
 
-注意:本工程要求MRS的版本不低于2.3.0。
+注意:本工程要求MRS的版本不低于2.4.0。
 
 # 目录说明
 
