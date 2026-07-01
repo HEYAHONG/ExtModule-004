@@ -1,6 +1,6 @@
 # 说明
 
-CH32V208WBU6-EVT-R0是[wch](www.wch.cn)官方出品的开发板，可用于固件验证。
+CH32V208WBU6-EVT-R0是[wch](http://www.wch.cn)官方出品的开发板，可用于固件验证。
 
 # 原理图
 
