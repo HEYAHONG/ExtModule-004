@@ -14,6 +14,7 @@
 
 - [CH32FV2x_V3xRM.PDF](Doc/CH32FV2x_V3xRM.PDF)
 - [CH32V208DS0.PDF](Doc/CH32V208DS0.PDF)
+- [QingKeV4_Processor_Manual.PDF](Doc/QingKeV4_Processor_Manual.PDF)
 
 # 目录结构
 
