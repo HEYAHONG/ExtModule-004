@@ -41,9 +41,9 @@ void hbox_enter_critical()
     if (hbox_critical_cnt == 0)
     {
         /*
-         * TODO:实现临界区,开关全局中断(MIE)将导致异常(MPP在Startup过程中被置为0,通过MRET进入main函数后就是用户模式，因此应当使用wch自定义CSR寄存器gintenr（地址：0x800）开关中断)
-         * 临时解决方法为对有可能使用到全局锁的中断在此处开关中断(如软件中断等)
+         * 实现临界区,直接开关全局中断(MIE)将导致异常(MPP在Startup过程中被置为0,通过MRET进入main函数后就是用户模式，因此应当使用wch自定义CSR寄存器gintenr（地址：0x800）开关中断)
          */
+        __disable_irq();
     }
     hbox_critical_cnt++;
 }
@@ -54,10 +54,9 @@ void hbox_exit_critical()
     if (hbox_critical_cnt == 0)
     {
         /*
-         * TODO:实现临界区,开关全局中断(MIE)将导致异常(MPP在Startup过程中被置为0,通过MRET进入main函数后就是用户模式，因此应当使用wch自定义CSR寄存器gintenr（地址：0x800）开关中断)
-         * 临时解决方法为对有可能使用到全局锁的中断在此处开关中断(如软件中断等)
+         * 实现临界区,直接开关全局中断(MIE)将导致异常(MPP在Startup过程中被置为0,通过MRET进入main函数后就是用户模式，因此应当使用wch自定义CSR寄存器gintenr（地址：0x800）开关中断)
          */
-
+        __enable_irq();
 
     }
 }
