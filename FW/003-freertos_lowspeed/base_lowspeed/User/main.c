@@ -129,11 +129,16 @@ int main(void)
     
     hruntime_init_lowlevel();
 
-    xTaskCreate( hbox_task_entry, "hbox_task",4096, NULL, 1, NULL );
+    xTaskCreate( hbox_task_entry, "hbox_task",4096/sizeof(StackType_t), NULL, 1, NULL );
 
-    xTaskCreate( main_task_entry, "main_task",4096, NULL, 2, NULL );
+    xTaskCreate( main_task_entry, "main_task",4096/sizeof(StackType_t), NULL, 2, NULL );
 
     vTaskStartScheduler();
+
+    /*
+     * 一般不会到这里
+     */
+    while(true);
     
 }
 
