@@ -29,6 +29,7 @@ static class HCPPGuiDriver
     bool IsRegisterClass;
     HWND hwnd;
     HDC hdc;
+    HBITMAP hbitmap;
     friend LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
     std::recursive_mutex m_lock;
 public:
@@ -42,7 +43,6 @@ public:
             {
                 return false;
             }
-            HBITMAP hbitmap=CreateCompatibleBitmap(hdc,w,h);
             if(hbitmap==NULL)
             {
                 DeleteDC(memdc);
@@ -56,12 +56,10 @@ public:
                     //每个像素都进行一次转换
                     hgui_pixel_t final_pixel=hgui_pixel_bits_get(pixel,i+x,j+y);
                     COLORREF color = RGB((final_pixel.pixel_32_bits >> 16) & 0xFF, (final_pixel.pixel_32_bits >> 8) & 0xFF, (final_pixel.pixel_32_bits) & 0xFF);
-                    SetPixel(memdc, i, j, color);
+                    SetPixel(memdc, i+x, j+y, color);
                 }
             }
-            BitBlt(hdc, x, y, w, h, memdc, 0, 0, SRCCOPY);
             SelectObject(memdc,NULL);
-            DeleteObject(hbitmap);
             DeleteDC(memdc);
             return true;
         }
@@ -139,6 +137,16 @@ public:
             }
         }
 
+        if (hbitmap != NULL)
+        {
+            DeleteObject(hbitmap);
+            hbitmap = CreateCompatibleBitmap(hdc, 320, 240);
+        }
+        else
+        {
+            hbitmap = CreateCompatibleBitmap(hdc, 320, 240);
+        }
+
         return true;
     }
     static bool g_reset(hgui_driver_t *driver)
@@ -168,58 +176,82 @@ public:
         {
             return false;
         }
+
+        if (hbitmap != NULL && ((*w) > 0 || (*h) > 0))
         {
-            RECT rect= {0};
-            if(GetClientRect(hwnd,&rect))
+            DeleteObject(hbitmap);
+            hbitmap = NULL;
+        }
+
+        {
+            RECT rect = { 0 };
+            bool need_resize = ((*w) > 0 || (*h) > 0);
+            if (GetClientRect(hwnd, &rect))
             {
-                if((*w) < 0 )
+                if ((*w) < 0)
                 {
                     (*w) = rect.right - rect.left;
                 }
 
-                if((*h) < 0 )
+                if ((*h) < 0)
                 {
                     (*h) = rect.bottom - rect.top;
                 }
             }
 
-            ssize_t new_w = (*w);
-            ssize_t new_h = (*h);
-
-            bool ret = (MoveWindow(hwnd,rect.left,rect.top,new_w,new_h,TRUE)!=0);
-
-            if(GetClientRect(hwnd,&rect))
+            bool ret = true;
+            if(need_resize)
             {
-                (*w) = rect.right - rect.left;
-                if((*w) < 0)
+                ssize_t new_w = (*w);
+                ssize_t new_h = (*h);
+
+                ret = (MoveWindow(hwnd, rect.left, rect.top, new_w, new_h, TRUE) != 0);
+
+                if (GetClientRect(hwnd, &rect))
                 {
-                    (*w)=-(*w);
+                    (*w) = rect.right - rect.left;
+                    if ((*w) < 0)
+                    {
+                        (*w) = -(*w);
+                    }
+                    (*h) = rect.bottom - rect.top;
+                    if ((*h) < 0)
+                    {
+                        (*h) = -(*h);
+                    }
                 }
-                (*h) = rect.bottom - rect.top;
-                if((*h) < 0)
+
+                ret = (MoveWindow(hwnd, rect.left, rect.top, 2 * new_w - (*w), 2 * new_h - (*h), TRUE) != 0);
+
+                if (GetClientRect(hwnd, &rect))
                 {
-                    (*h)=-(*h);
+                    (*w) = rect.right - rect.left;
+                    if ((*w) < 0)
+                    {
+                        (*w) = -(*w);
+                    }
+                    (*h) = rect.bottom - rect.top;
+                    if ((*h) < 0)
+                    {
+                        (*h) = -(*h);
+                    }
                 }
             }
 
-            ret = (MoveWindow(hwnd,rect.left,rect.top,2*new_w-(*w),2*new_h-(*h),TRUE)!=0);
-
-            if(GetClientRect(hwnd,&rect))
+            if (hbitmap == NULL)
             {
-                (*w) = rect.right - rect.left;
-                if((*w) < 0)
-                {
-                    (*w)=-(*w);
-                }
-                (*h) = rect.bottom - rect.top;
-                if((*h) < 0)
-                {
-                    (*h)=-(*h);
-                }
+                hbitmap = CreateCompatibleBitmap(hdc, *w, *h);
             }
 
             return ret;
         }
+
+        if (hbitmap == NULL)
+        {
+            hbitmap = CreateCompatibleBitmap(hdc, *w, *h);
+        }
+
+
         return false;
     }
 
@@ -246,6 +278,23 @@ public:
                 DispatchMessage(&messages);
             }
         }
+
+        if (hbitmap != NULL)
+        {
+            HDC memdc = CreateCompatibleDC(hdc);
+            if (memdc != NULL)
+            {
+                SelectObject(memdc, hbitmap);
+                BITMAP bmp;
+                if (GetObject(hbitmap, sizeof(BITMAP), &bmp) != 0)
+                {
+                    BitBlt(hdc, 0, 0, bmp.bmWidth, bmp.bmHeight, memdc, 0, 0, SRCCOPY);
+                }
+                SelectObject(memdc, NULL);
+                DeleteDC(memdc);
+            }
+        }
+
         return true;
     }
     static bool g_is_ok(hgui_driver_t *driver)
@@ -258,7 +307,7 @@ public:
         obj.update(driver);
         return obj.is_ok(driver);
     }
-    HCPPGuiDriver():IsRegisterClass(false),hwnd(NULL),hdc(NULL)
+    HCPPGuiDriver():IsRegisterClass(false),hwnd(NULL),hdc(NULL),hbitmap(NULL)
     {
         driver.usr=this;
         driver.fill_rectangle=g_fill_rectangle;
@@ -270,6 +319,12 @@ public:
     ~HCPPGuiDriver()
     {
         std::lock_guard<std::recursive_mutex> lock(m_lock);
+        if (hbitmap != NULL)
+        {
+            DeleteObject(hbitmap);
+            hbitmap = NULL;
+        }
+
         if(hwnd!=NULL)
         {
             if(hdc!=NULL)
@@ -329,6 +384,18 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         }
         switch (wParam)
         {
+        case VK_RETURN:
+        {
+            key.key_value = HGUI_GUI_EVENT_KEY_VALUE_RETURN;
+            hgui_gui_event_key_emit(&key, hgui_driver_event_input_helper, &driver);
+        }
+        break;
+        case VK_ESCAPE:
+        {
+            key.key_value = HGUI_GUI_EVENT_KEY_VALUE_ESCAPE;
+            hgui_gui_event_key_emit(&key, hgui_driver_event_input_helper, &driver);
+        }
+        break;
         case VK_INSERT:
         {
             key.key_value = HGUI_GUI_EVENT_KEY_VALUE_INSERT;
@@ -647,7 +714,9 @@ public:
                     SDL_FillRect(screen, &fill_rect, final_pixel.pixel_32_bits);
                 }
             }
-            SDL_Flip(screen);
+            /*
+             * 此处不刷新，在update时刷新
+             */
             return true;
         }
         return false;
@@ -677,6 +746,12 @@ public:
             screen=SDL_SetVideoMode(320,240,32,SDL_HWSURFACE);
             SDL_WM_SetCaption("","sdl");
         }
+
+        if(screen==NULL)
+        {
+            return false;
+        }
+
         return true;
     }
     static bool g_reset(hgui_driver_t *driver)
@@ -704,7 +779,7 @@ public:
     {
         (void)driver;
         std::lock_guard<std::recursive_mutex> lock(m_lock);
-        if(w==NULL || h == NULL)
+        if(w==NULL || h == NULL || screen == NULL)
         {
             return false;
         }
@@ -785,6 +860,12 @@ public:
                 }
             }
         }
+
+        if(screen!=NULL)
+        {
+            SDL_Flip(screen);
+        }
+
         return true;
     }
     static bool g_is_ok(hgui_driver_t *driver)
