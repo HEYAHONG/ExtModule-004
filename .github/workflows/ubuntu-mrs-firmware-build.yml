@@ -1,0 +1,236 @@
+name: ubuntu mrs firmware build
+
+on:
+  push:
+    tags: [testing]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Bare MRS3 package URL. If the runner cannot use it, the install step
+  # requests a fresh signed URL from the official download API.
+  MRS_DEB_URL: "https://file-oss.mounriver.com/upgrade/MounRiverStudio_Linux_X64_V300.deb"
+  MRS_RESOURCE_ID: "2114897869975605250"
+  MRS_EXE: "/usr/share/MRS3/MRS-linux-x64/mounriver-studio 3"
+  MRS_CLI: "/usr/share/MRS3/MRS-linux-x64/bin/mounriver-studio 3"
+
+jobs:
+  discover:
+    name: Discover MRS subprojects
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.find.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Find FW projects and .wvproj subprojects
+        id: find
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          entries=()
+          for prefix_dir in FW/[0-9]*-*/; do
+            [[ -d "$prefix_dir" ]] || continue
+            prefix="${prefix_dir%/}"
+            prefix="${prefix##*/}"
+
+            for sub_dir in "$prefix_dir"*/; do
+              [[ -d "$sub_dir" ]] || continue
+
+              wvprojs=("$sub_dir"*.wvproj)
+              ((${#wvprojs[@]})) || continue
+
+              sub="${sub_dir%/}"
+              sub="${sub##*/}"
+              entries+=("$(jq -nc \
+                --arg prefix "$prefix" \
+                --arg subproject "$sub" \
+                --arg project_dir "${sub_dir%/}" \
+                --arg wvproj "${wvprojs[0]}" \
+                '{prefix: $prefix, subproject: $subproject, project_dir: $project_dir, wvproj: $wvproj}')")
+            done
+          done
+
+          if ((${#entries[@]} == 0)); then
+            echo 'projects=[]' >> "$GITHUB_OUTPUT"
+            echo "No MRS subproject (*.wvproj) was found under FW/."
+          else
+            json="$(printf '%s\n' "${entries[@]}" | jq -sc '.')"
+            echo "projects=${json}" >> "$GITHUB_OUTPUT"
+            printf '%s\n' "${entries[@]}" \
+              | jq -r '"  \(.prefix) / \(.subproject) -> \(.wvproj)"'
+          fi
+
+  build:
+    name: Build and package
+    needs: discover
+    if: needs.discover.outputs.projects != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PROJECTS: ${{ needs.discover.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install MounRiver Studio
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          deb="$RUNNER_TEMP/MounRiverStudio.deb"
+
+          download_deb() {
+            rm -f "$deb"
+            curl -fL --retry 3 --retry-delay 5 -o "$deb" "$1" || return 1
+            dpkg-deb -I "$deb" >/dev/null 2>&1
+          }
+
+          if ! download_deb "$MRS_DEB_URL"; then
+            echo "::warning::The provided MRS deb URL was rejected; requesting a fresh URL."
+            fresh_url="$(curl -fsSL \
+              "https://api.mounriver.com/mountriver/api/version/getDownloadUrl?resourceId=${MRS_RESOURCE_ID}" \
+              | jq -r '.result // empty' || true)"
+            if [[ -z "$fresh_url" ]]; then
+              echo "::error::Failed to obtain a fresh MRS download URL."
+              exit 1
+            fi
+            download_deb "$fresh_url" \
+              || { echo "::error::Failed to download the MRS deb."; exit 1; }
+          fi
+
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb \
+            libnss3 \
+            libgbm1 \
+            libxss1 \
+            libxtst6 \
+            libxrandr2 \
+            libxdamage1 \
+            libxcomposite1 \
+            libxkbcommon0 \
+            libpango-1.0-0 \
+            libcairo2 \
+            libcups2 \
+            libdrm2 \
+            libexpat1 \
+            libxfixes3 \
+            libx11-xcb1 \
+            libxcb-dri3-0 \
+            libatk-bridge2.0-0 \
+            libatspi2.0-0
+          sudo apt-get install -y --no-install-recommends libasound2t64 libgtk-3-0t64 \
+            || sudo apt-get install -y --no-install-recommends libasound2 libgtk-3-0
+
+          if ! sudo apt-get install -y "$deb"; then
+            # The post-install script only registers desktop/udev entries;
+            # the IDE files are already unpacked, so keep going if it fails.
+            echo "::warning::MRS post-install step failed; continuing with the unpacked IDE."
+            sudo dpkg -i "$deb" || true
+          fi
+
+          test -x "$MRS_EXE"
+          test -x "$MRS_CLI"
+          "$MRS_CLI" --version
+
+      - name: Build subprojects and package hex/elf/map
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          dist="$RUNNER_TEMP/dist"
+          mkdir -p "$dist"
+          failed=0
+
+          while IFS= read -r item; do
+            prefix="$(jq -r '.prefix' <<< "$item")"
+            sub="$(jq -r '.subproject' <<< "$item")"
+            project_dir="$GITHUB_WORKSPACE/$(jq -r '.project_dir' <<< "$item")"
+            wvproj="$GITHUB_WORKSPACE/$(jq -r '.wvproj' <<< "$item")"
+            log="$RUNNER_TEMP/mrs-${prefix}-${sub}.log"
+            user_data="$RUNNER_TEMP/mrs-user-data-${prefix}-${sub}"
+
+            echo "::group::Build ${prefix}/${sub}"
+
+            rm -rf "$user_data"
+            mkdir -p "$user_data"
+
+            set +e
+            timeout 120m xvfb-run -a "$MRS_EXE" \
+              -m "$wvproj" \
+              --mrsSilentType rebuild \
+              --no-sandbox --disable-gpu \
+              --user-data-dir "$user_data" \
+              2>&1 | tee "$log"
+            status=${PIPESTATUS[0]}
+            set -e
+
+            if ((status != 0)); then
+              echo "::error::MRS exited with status ${status} for ${prefix}/${sub}."
+              failed=1
+              echo "::endgroup::"
+              continue
+            fi
+
+            if grep -q 'Build Failed\.' "$log"; then
+              echo "::error::Build failed for ${prefix}/${sub}; see the build log."
+              failed=1
+              echo "::endgroup::"
+              continue
+            fi
+
+            if ! grep -q 'Build Finished\.' "$log"; then
+              echo "::error::'Build Finished.' was not found for ${prefix}/${sub}."
+              failed=1
+              echo "::endgroup::"
+              continue
+            fi
+
+            obj_dir="${project_dir}/obj"
+            mapfile -t files < <(find "$obj_dir" -maxdepth 1 -type f \
+              \( -name '*.hex' -o -name '*.elf' -o -name '*.map' \) | sort)
+
+            missing=0
+            for ext in hex elf map; do
+              if ! printf '%s\n' "${files[@]}" | grep -q "\.${ext}$"; then
+                echo "::error::No .${ext} file was produced for ${prefix}/${sub}."
+                missing=1
+              fi
+            done
+            if ((missing)); then
+              failed=1
+              echo "::endgroup::"
+              continue
+            fi
+
+            archive="${dist}/${prefix}-${sub}-snapshot.tar.gz"
+            tar -czf "$archive" -C "$obj_dir" "${files[@]##*/}"
+
+            echo "Created ${archive}:"
+            tar -tzf "$archive"
+            echo "::endgroup::"
+          done < <(jq -c '.[]' <<< "$PROJECTS")
+
+          if ((failed)); then
+            exit 1
+          fi
+
+      - name: Upload firmware snapshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mrs-firmware-snapshots
+          path: ${{ runner.temp }}/dist/*-snapshot.tar.gz
+          if-no-files-found: warn
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mrs-build-logs
+          path: ${{ runner.temp }}/mrs-*.log
+          if-no-files-found: ignore
