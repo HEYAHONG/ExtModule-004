@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   # Bare MRS3 package URL. If the runner cannot use it, the install step
@@ -227,10 +227,38 @@ jobs:
           path: ${{ runner.temp }}/dist/*-snapshot.tar.gz
           if-no-files-found: warn
 
-      - name: Upload build logs
-        if: always()
-        uses: actions/upload-artifact@v7
+  release:
+    name: Publish testing release
+    needs: [discover, build]
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download firmware snapshots
+        uses: actions/download-artifact@v8
         with:
-          name: mrs-build-logs
-          path: ${{ runner.temp }}/mrs-*.log
-          if-no-files-found: ignore
+          name: mrs-firmware-snapshots
+          path: ${{ runner.temp }}/dist
+
+      - name: Publish to the testing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          files=("${RUNNER_TEMP}"/dist/*-snapshot.tar.gz)
+          if [[ ! -e "${files[0]}" ]]; then
+            echo "::error::No firmware snapshot packages were downloaded."
+            exit 1
+          fi
+
+          if ! gh release view testing >/dev/null 2>&1; then
+            gh release create testing \
+              --prerelease \
+              --title "testing" \
+              --notes "Automated MRS firmware snapshots for tag \`testing\`." \
+              --target "$GITHUB_SHA"
+          fi
+
+          gh release upload testing "${files[@]}" --clobber
