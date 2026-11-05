@@ -15,7 +15,10 @@
 			"link": "WCH-Link",
 			"peripheral_version": "2.2",
 			"calibrateSupport": false,
-			"calibrateCommand": ""
+			"calibrateCommand": "",
+			"UIConfigSupport": false,
+			"UIConfigCommand": "",
+			"externalFlashSupport": false
 		},
 		"linkedFolders": [
 			{
@@ -32,6 +35,21 @@
 				"parentLogicPath": "",
 				"type": "file",
 				"name": "*.wvproj"
+			},
+			{
+				"parentLogicPath": "",
+				"type": "file",
+				"name": "*.7z"
+			},
+			{
+				"parentLogicPath": "",
+				"type": "file",
+				"name": "*.zip"
+			},
+			{
+				"parentLogicPath": "",
+				"type": "file",
+				"name": "*.tar"
 			}
 		],
 		"projectName": "base_lowspeed",
@@ -41,14 +59,15 @@
 	"buildConfig": {
 		"configurations": [
 			{
+				"parallelizationNumber": "optimal",
 				"buildArtifact": {
 					"artifact_name": "${ProjName}",
 					"artifact_extension": "elf",
 					"output_prefix": "",
 					"artifact_type": "Executable"
 				},
-				"parallelizationNumber": "optimal",
 				"stop_on_first_build_error": true,
+				"usingCacheAccelerate": false,
 				"pre_script": "",
 				"pre_script_description": "",
 				"post_script": "",
@@ -90,7 +109,11 @@
 					"${project}/HBox/h3rdparty/port",
 					"${project}/HBox/template",
 					"${project}/HBox/h3rdparty/patch",
-					"${project}/HBox/hstandalone/hsoftplc/hsoftplc"
+					"${project}/HBox/hstandalone/hsoftplc/hsoftplc",
+					"${project}/HBox/hstandalone/hsimplegui/port/font",
+					"${project}/HBox/hstandalone/hsimplegui/3rdparty/source",
+					"${project}/HBox/hstandalone/hflashdb/3rdparty/source",
+					"${project}/HBox/hstandalone"
 				],
 				"optimization": {
 					"level": "size",
@@ -335,6 +358,7 @@
 					"copy_only_section_text": false,
 					"copy_only_section_data": false,
 					"copy_only_sections": [],
+					"create_algorithm_file": false,
 					"other_flags": ""
 				},
 				"createList": {
@@ -397,6 +421,8 @@
 		"disablepowerout": false,
 		"clearcodeflash": false,
 		"disablecodeprotect": true,
+		"flashType": "",
+		"asmFile_path": "",
 		"exepath": "",
 		"exearguments": ""
 	},
@@ -410,7 +436,7 @@
 			"configOptions": [
 				"-f \"${WCH:OpenOCD:default}/bin/wch-riscv.cfg\""
 			],
-			"host": "localhost",
+			"host": "127.0.0.1",
 			"port": 3333,
 			"skipDownloadBeforeDebug": false,
 			"enablePageEraser": false,

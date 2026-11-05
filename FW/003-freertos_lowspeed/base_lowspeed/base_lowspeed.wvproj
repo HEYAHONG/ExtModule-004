@@ -31,6 +31,21 @@
 				"parentLogicPath": "",
 				"type": "file",
 				"name": "*.wvproj"
+			},
+			{
+				"parentLogicPath": "",
+				"type": "file",
+				"name": "*.7z"
+			},
+			{
+				"parentLogicPath": "",
+				"type": "file",
+				"name": "*.zip"
+			},
+			{
+				"parentLogicPath": "",
+				"type": "file",
+				"name": "*.tar"
 			}
 		],
 		"projectName": "base_lowspeed",
@@ -40,14 +55,15 @@
 	"buildConfig": {
 		"configurations": [
 			{
+				"parallelizationNumber": "optimal",
 				"buildArtifact": {
 					"artifact_name": "${ProjName}",
 					"artifact_extension": "elf",
 					"output_prefix": "",
 					"artifact_type": "Executable"
 				},
-				"parallelizationNumber": "optimal",
 				"stop_on_first_build_error": true,
+				"usingCacheAccelerate": false,
 				"pre_script": "",
 				"pre_script_description": "",
 				"post_script": "",
@@ -73,7 +89,8 @@
 					"${project}/HBox/hstandalone/hsoftplc/hsoftplc",
 					"${project}/HBox/h3rdparty/3rdparty",
 					"${project}/HBox/h3rdparty/patch",
-					"${project}/HBox/h3rdparty/port"
+					"${project}/HBox/h3rdparty/port",
+					"${project}/HBox/hstandalone"
 				],
 				"optimization": {
 					"level": "size",
@@ -456,10 +473,8 @@
 			"ATTR_BUILD_BEFORE_LAUNCH_ATTR": 2,
 			"GdbServerAllocateConsole": true,
 			"GdbServerAllocateTelnetConsole": false,
-			"SkipDownloadBeforeDebug": false,
 			"StartGdbCLient": true,
-			"UPDATE_THREADLIST_ON_SUSPEND": false,
-			"DebugInRam": false
+			"UPDATE_THREADLIST_ON_SUSPEND": false
 		}
 	}
 }
